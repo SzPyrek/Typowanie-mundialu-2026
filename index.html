@@ -18,15 +18,30 @@
         .container { 
             max-width: 650px; 
             margin: 0 auto; 
-            background: rgba(15, 23, 42, 0.7); /* Półprzezroczysty ciemny granat */
+            background: rgba(15, 23, 42, 0.7); 
             padding: 30px; 
             border-radius: 16px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
-            border: 1px solid rgba(226, 194, 117, 0.2); /* Delikatne złote krawędzie */
+            border: 1px solid rgba(226, 194, 117, 0.2); 
             backdrop-filter: blur(10px);
+            position: relative; /* Wymagane, aby pozycjonować nazwę użytkownika w rogu */
         }
 
-        /* Złote nagłówki wzorowane na "2026 FIFA WORLD CUP KNOCKOUTS" */
+        /* ZŁOTY ZNACZEK UŻYTKOWNIKA W ROGU */
+        .user-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #E2C275;
+            background: rgba(226, 194, 117, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(226, 194, 117, 0.3);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
         h1 { 
             text-align: center; 
             color: #E2C275; 
@@ -40,17 +55,22 @@
         .subtitle { text-align: center; font-size: 1.2rem; margin-top: 0; margin-bottom: 30px; color: #a0aec0; text-transform: uppercase; letter-spacing: 4px;}
         
         input[type="number"], input[type="password"], select { 
-            padding: 12px; margin: 5px 0; 
+            padding: 12px; margin: 8px 0; 
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #4a5568; 
             border-radius: 8px; font-size: 18px; text-align: center; 
             color: white;
+            width: 100%;
+            box-sizing: border-box;
             transition: all 0.3s;
         }
-        input[type="number"]:focus, input[type="password"]:focus, select:focus { border-color: #E2C275; outline: none; box-shadow: 0 0 10px rgba(226, 194, 117, 0.2); }
-        .wynik-input { width: 65px; font-weight: bold; font-size: 20px; }
+        /* Specjalne poprawki dla select, żeby strzałka wyboru była jasna w ciemnym motywie */
+        select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+        select option { background: #131b2c; color: white; }
         
-        /* Główny przycisk */
+        input[type="number"]:focus, input[type="password"]:focus, select:focus { border-color: #E2C275; outline: none; box-shadow: 0 0 10px rgba(226, 194, 117, 0.2); }
+        .wynik-input { width: 65px !important; font-weight: bold; font-size: 20px; display: inline-block; }
+        
         button { 
             background: linear-gradient(135deg, #d4af37 0%, #aa8222 100%);
             color: #000; border: none; padding: 15px 20px; 
@@ -61,62 +81,57 @@
         button:hover { filter: brightness(1.1); transform: translateY(-2px); }
         button:disabled { background: #2d3748; color: #718096; cursor: not-allowed; transform: none; }
         
-        /* Tabela */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2); }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { background-color: rgba(226, 194, 117, 0.1); color: #E2C275; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; border-bottom: 2px solid #E2C275; }
         tr:hover { background-color: rgba(255,255,255,0.05); }
         
-        /* Karty Meczów */
         .match-card { 
             background: linear-gradient(145deg, #131b2c 0%, #0d121d 100%);
             border: 1px solid rgba(226, 194, 117, 0.15); padding: 25px 20px; 
             border-radius: 12px; margin-bottom: 20px; text-align: center; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            position: relative;
         }
         .teams { font-weight: 800; font-size: 22px; margin-bottom: 15px; color: #ffffff; letter-spacing: 1px;}
         .match-time { font-size: 12px; color: #E2C275; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
         
         .hidden { display: none; }
-        
-        /* Sekcja Remisu */
         .awans-sekcja { margin-top: 15px; background: rgba(226, 194, 117, 0.05); border: 1px dashed #E2C275; padding: 15px; border-radius: 8px; }
+        .locked-msg { color: #fc8181; font-weight: bold; margin-top: 15px; text-align: center; letter-spacing: 0.5px; }
         
-        /* Blokada czasowa */
-        .locked-msg { color: #fc8181; font-weight: bold; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        
-        #loader { text-align: center; font-weight: bold; color: #E2C275; margin: 30px 0; font-size: 20px; animation: pulse 1.5s infinite; }
+        #loader { text-align: center; font-weight: bold; color: #E2C275; margin: 40px 0; font-size: 20px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div id="user-badge" class="user-badge hidden"></div>
+
     <h1>KNOCKOUTS</h1>
     <div class="subtitle">Typer Mundial 2026</div>
 
-    <div id="login-section">
-        <h2 style="text-align: center; color: #E2C275; font-size: 1.2rem; text-transform: uppercase;">Logowanie gracza</h2>
-        <input type="password" id="pin-input" placeholder="Wpisz 4-cyfrowy PIN" style="width: 100%; box-sizing: border-box;">
-        <button onclick="zaloguj()">Rozpocznij</button>
+    <div id="loader">Wczytywanie aplikacji... ⚽</div>
+
+    <div id="login-section" class="hidden">
+        <h2 style="text-align: center; color: #E2C275; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 15px;">Wybierz swój profil</h2>
+        <select id="user-select">
+            </select>
+        <input type="password" id="pin-input" placeholder="Wpisz swój 4-cyfrowy PIN">
+        <button onclick="zaloguj()">Rozpocznij grę</button>
     </div>
 
     <div id="app-section" class="hidden">
-        <div id="loader">Wczytywanie danych z bazy...</div>
-        
-        <div id="content" class="hidden">
-            <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; text-transform: uppercase; font-size: 1.2rem;">Tabela Wyników</h2>
-            <table>
-                <thead>
-                    <tr><th>Pozycja</th><th>Gracz</th><th>Punkty</th></tr>
-                </thead>
-                <tbody id="ranking-body"></tbody>
-            </table>
+        <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; text-transform: uppercase; font-size: 1.2rem;">Tabela Wyników</h2>
+        <table>
+            <thead>
+                <tr><th>Pozycja</th><th>Gracz</th><th>Punkty</th></tr>
+            </thead>
+            <tbody id="ranking-body"></tbody>
+        </table>
 
-            <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; margin-top: 40px; text-transform: uppercase; font-size: 1.2rem;">Kupony (Faza Pucharowa)</h2>
-            <div id="mecze-container"></div>
-        </div>
+        <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; margin-top: 40px; text-transform: uppercase; font-size: 1.2rem;">Kupony (Faza Pucharowa)</h2>
+        <div id="mecze-container"></div>
     </div>
 </div>
 
@@ -127,34 +142,59 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxuOT8RzqyHnNYYWGjg417eSfbJcSg4PpHdcgj0Rj_JBBRAzIFk9DDIhMFEGCnCyClZww/exec"; 
     
     let aktualnyPin = "";
+    let globalneMecze = [];
 
-    function zaloguj() {
-        const pin = document.getElementById('pin-input').value;
-        if (!pin) return alert("Podaj PIN!");
-        aktualnyPin = pin;
-        
-        document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('app-section').classList.remove('hidden');
-        pobierzDane();
-    }
+    // Po uruchomieniu strony od razu pobieramy dane z bazy
+    window.onload = function() {
+        pobierzDaneNaStart();
+    };
 
-    async function pobierzDane() {
+    async function pobierzDaneNaStart() {
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
             
-            ukryjLoader();
+            globalneMecze = data.mecze;
+            
             renderujRanking(data.ranking);
-            renderujMecze(data.mecze);
+            zbudujListeGraczy(data.ranking);
+            
+            // Ukrywamy loader, pokazujemy ekran logowania
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
         } catch (error) {
-            alert("Błąd pobierania danych.");
-            document.getElementById('loader').innerText = "Błąd pobierania danych. Odśwież stronę.";
+            document.getElementById('loader').innerText = "Błąd połączenia z bazą danych. Odśwież stronę.";
         }
     }
 
-    function ukryjLoader() {
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('content').classList.remove('hidden');
+    function zbudujListeGraczy(ranking) {
+        const select = document.getElementById('user-select');
+        select.innerHTML = '<option value="">-- Wybierz kim jesteś --</option>';
+        ranking.forEach(gracz => {
+            select.innerHTML += `<option value="${gracz.imie}">${gracz.imie}</option>`;
+        });
+    }
+
+    function zaloguj() {
+        const wybranyGracz = document.getElementById('user-select').value;
+        const pin = document.getElementById('pin-input').value;
+        
+        if (!wybranyGracz) return alert("Wybierz swoje imię z listy!");
+        if (!pin) return alert("Wpisz swój PIN!");
+        
+        aktualnyPin = pin;
+        
+        // Pokazujemy znaczek z nazwą w rogu
+        const badge = document.getElementById('user-badge');
+        badge.innerText = `👤 ${wybranyGracz}`;
+        badge.classList.remove('hidden');
+        
+        // Przełączamy sekcje widoku
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('app-section').classList.remove('hidden');
+        
+        // Renderujemy mecze na kuponie
+        renderujMecze(globalneMecze);
     }
 
     function renderujRanking(ranking) {
@@ -167,7 +207,7 @@
     }
 
     function formatujDate(dataStr) {
-        if (!dataStr) return "Brak daty - można typować";
+        if (!dataStr) return "Brak ograniczenia czasowego";
         const d = new Date(dataStr);
         return d.toLocaleDateString('pl-PL', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'});
     }
@@ -180,13 +220,10 @@
         mecze.forEach(mecz => {
             if (mecz.wynikA === "" || mecz.wynikB === "") {
                 
-                // SPRAWDZANIE BLOKADY CZASOWEJ
                 let zablokowany = false;
                 if (mecz.dataRozpoczecia) {
                     const czasMeczu = new Date(mecz.dataRozpoczecia);
-                    if (teraz > czasMeczu) {
-                        zablokowany = true;
-                    }
+                    if (teraz > czasMeczu) zablokowany = true;
                 }
 
                 const html = `
@@ -196,7 +233,7 @@
                         
                         ${zablokowany ? 
                         `
-                            <div class="locked-msg">🔒 MECZ WYSTARTOWAŁ - TYPOWANIE ZAMKNIĘTE</div>
+                            <div class="locked-msg">🔒 MECZ ROZPOCZĘTY - TYPOWANIE ZABLOKOWANE</div>
                         ` 
                         : 
                         `
@@ -208,7 +245,7 @@
                             
                             <div id="awans_sekcja_${mecz.id}" class="awans-sekcja hidden">
                                 <label style="font-weight: bold; color: #E2C275;">REMIS! Kto wygra w rzutach karnych?</label><br>
-                                <select id="awans_${mecz.id}" style="width: 100%; margin-top: 10px;">
+                                <select id="awans_${mecz.id}" style="margin-top: 10px;">
                                     <option value="">-- Wybierz awansującego --</option>
                                     <option value="A">${mecz.zespolA}</option>
                                     <option value="B">${mecz.zespolB}</option>
@@ -246,12 +283,8 @@
         const typB = document.getElementById(`typB_${idMeczu}`).value;
         const typAwans = document.getElementById(`awans_${idMeczu}`).value;
 
-        if (typA === "" || typB === "") {
-            return alert("Wpisz wynik dla obu drużyn!");
-        }
-        if (typA === typB && typAwans === "") {
-            return alert("Przy remisie musisz wybrać drużynę, która awansuje po rzutach karnych!");
-        }
+        if (typA === "" || typB === "") return alert("Wpisz wynik dla obu drużyn!");
+        if (typA === typB && typAwans === "") return alert("Przy remisie musisz wybrać drużynę, która awansuje po rzutach karnych!");
 
         const przycisk = document.getElementById(`btn_${idMeczu}`);
         przycisk.innerText = "Przetwarzanie...";
@@ -280,7 +313,7 @@
                 przycisk.style.color = "#000";
             }, 3000);
         } catch (error) {
-            alert("Błąd. Odśwież stronę i spróbuj ponownie.");
+            alert("Błąd zapisu.");
             przycisk.innerText = "Spróbuj ponownie";
             przycisk.disabled = false;
         }
