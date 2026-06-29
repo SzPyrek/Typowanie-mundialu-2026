@@ -22,22 +22,40 @@
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { background-color: rgba(226, 194, 117, 0.1); color: #E2C275; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; border-bottom: 2px solid #E2C275; }
         tr:hover { background-color: rgba(255,255,255,0.05); }
+        
+        /* STYLE DLA KART MECZÓW */
         .match-card { background: linear-gradient(145deg, #131b2c 0%, #0d121d 100%); border: 1px solid rgba(226, 194, 117, 0.15); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .teams { font-weight: 800; font-size: 22px; margin-bottom: 15px; color: #ffffff; letter-spacing: 1px;}
         .match-time { font-size: 12px; color: #E2C275; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
         .hidden { display: none; }
         .awans-sekcja { margin-top: 15px; background: rgba(226, 194, 117, 0.05); border: 1px dashed #E2C275; padding: 15px; border-radius: 8px; }
         .locked-msg { color: #fc8181; font-weight: bold; margin-top: 15px; margin-bottom: 15px; text-align: center; letter-spacing: 0.5px; }
+        
         #loader { text-align: center; font-weight: bold; color: #E2C275; margin: 40px 0; font-size: 20px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        /* NOWE STYLE DLA LISTY TYPÓW GRACZY */
         .bets-list { margin-top: 20px; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border: 1px solid rgba(226, 194, 117, 0.1); }
         .bet-item { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 15px; }
         .bet-item:last-child { border-bottom: none; }
         .bet-name { font-weight: bold; color: #cbd5e0; }
         .bet-score { font-weight: bold; color: #ffffff; }
         .bet-awans { color: #a0aec0; font-size: 12px; font-weight: normal; margin-left: 5px; }
+        
+        .my-bet-info { background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.5); color: #48bb78; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
+        
+        /* NOWE STYLE SPECJALNIE DLA HISTORII ROZEGRANYCH MECZÓW */
+        .section-title { color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; margin-top: 40px; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; }
+        
+        /* Kolorowanie zakończonych kuponów (delikatny neonowy blask pasujący do mrocznego stylu) */
+        .card-perfect { border: 2px solid #2ecc71 !important; background: linear-gradient(145deg, #0e2417 0%, #08140d 100%) !important; box-shadow: 0 4px 20px rgba(46, 204, 113, 0.15); }
+        .card-partial { border: 2px solid #e67e22 !important; background: linear-gradient(145deg, #2c1a0c 0%, #170d06 100%) !important; box-shadow: 0 4px 20px rgba(230, 126, 34, 0.15); }
+        .card-missed { border: 2px solid #e74c3c !important; background: linear-gradient(145deg, #2a1111 0%, #150808 100%) !important; box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15); }
+        
+        /* Ładne statusy-odznaki na dole rozliczonych kuponów */
+        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-perfect { background: #2ecc71; color: #000; }
+        .badge-partial { background: #e67e22; color: #000; }
+        .badge-missed { background: #e74c3c; color: #fff; }
     </style>
 </head>
 <body>
@@ -66,8 +84,11 @@
             <tbody id="ranking-body"></tbody>
         </table>
 
-        <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; margin-top: 40px; text-transform: uppercase; font-size: 1.2rem;">Kupony (Faza Pucharowa)</h2>
+        <h2 class="section-title">Kupony (Faza Pucharowa)</h2>
         <div id="mecze-container"></div>
+
+        <h2 class="section-title">Rozegrane Mecze (Historia)</h2>
+        <div id="mecze-zakonczone-container"></div>
     </div>
 </div>
 
@@ -78,6 +99,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxuOT8RzqyHnNYYWGjg417eSfbJcSg4PpHdcgj0Rj_JBBRAzIFk9DDIhMFEGCnCyClZww/exec"; 
     
     let aktualnyPin = "";
+    let aktualnyGracz = ""; 
     let globalneMecze = [];
 
     window.onload = function() {
@@ -88,7 +110,6 @@
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
-            
             globalneMecze = data.mecze;
             
             renderujRanking(data.ranking);
@@ -99,6 +120,15 @@
         } catch (error) {
             document.getElementById('loader').innerText = "Błąd połączenia z bazą danych. Odśwież stronę.";
         }
+    }
+
+    async function pobierzDaneCicho() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            globalneMecze = data.mecze;
+            renderujMecze(globalneMecze);
+        } catch (e) { console.log("Błąd odświeżania w tle", e); }
     }
 
     function zbudujListeGraczy(ranking) {
@@ -117,9 +147,10 @@
         if (!pin) return alert("Wpisz swój PIN!");
         
         aktualnyPin = pin;
+        aktualnyGracz = wybranyGracz;
         
         const badge = document.getElementById('user-badge');
-        badge.innerText = `👤 ${wybranyGracz}`;
+        badge.innerText = `👤 ${aktualnyGracz}`;
         badge.classList.remove('hidden');
         
         document.getElementById('login-section').classList.add('hidden');
@@ -144,38 +175,98 @@
     }
 
     function renderujMecze(mecze) {
-        const container = document.getElementById('mecze-container');
-        container.innerHTML = "";
+        const containerAktywne = document.getElementById('mecze-container');
+        const containerZakonczone = document.getElementById('mecze-zakonczone-container');
+        
+        containerAktywne.innerHTML = "";
+        containerZakonczone.innerHTML = "";
+        
         const teraz = new Date();
+        let licznikAktywnych = 0;
+        let licznikZakonczonych = 0;
 
         mecze.forEach(mecz => {
-            if (mecz.wynikA === "" || mecz.wynikB === "") {
+            
+            // WARIANT A: MECZ ZAKOŃCZONY (SĄ WPISANE WYNIKI W GOOGLE SHEETS)
+            if (mecz.wynikA !== "" && mecz.wynikB !== "") {
+                licznikZakonczonych++;
                 
-        let zablokowany = false;
-        if (mecz.dataRozpoczecia) {
-        const czasMeczu = new Date(mecz.dataRozpoczecia);
-        // 1 * 60 * 60 * 1000 oznacza: 1 godzina * 60 minut * 60 sekund * 1000 milisekund
-        const godzinaPrzedMeczem = czasMeczu - (1 * 60 * 60 * 1000); 
-    
-        if (teraz > godzinaPrzedMeczem) {
-            zablokowany = true;
-        }
-        }
+                let mojTyp = mecz.typy.find(t => t.imie === aktualnyGracz);
+                
+                let wynikTekst = `${mecz.wynikA} : ${mecz.wynikB}`;
+                let offKtoAwans = mecz.awans === 'A' ? mecz.zespolA : (mecz.awans === 'B' ? mecz.zespolB : '');
+                if (mecz.wynikA === mecz.wynikB && offKtoAwans) {
+                    wynikTekst += ` (Awans: ${offKtoAwans})`;
+                }
+                
+                let typTekst = "Brak typu";
+                let klasaKarty = "card-missed";
+                let badgeHTML = '<span class="status-badge badge-missed">❌ 0 pkt (Brak typu)</span>';
+                
+                if (mojTyp) {
+                    typTekst = `${mojTyp.typA} : ${mojTyp.typB}`;
+                    let tKtoAwans = mojTyp.typAwans === 'A' ? mecz.zespolA : (mojTyp.typAwans === 'B' ? mecz.zespolB : '');
+                    if (mojTyp.typA === mojTyp.typB && tKtoAwans) {
+                        typTekst += ` (Awans: ${tKtoAwans})`;
+                    }
+                    
+                    // Matematyka punktacji na żywo na stronie, by określić kolor kuponu
+                    let offZwyciezca = mecz.wynikA > mecz.wynikB ? 'A' : (mecz.wynikB > mecz.wynikA ? 'B' : mecz.awans);
+                    let typZwyciezca = mojTyp.typA > mojTyp.typB ? 'A' : (mojTyp.typB > mojTyp.typA ? 'B' : mojTyp.typAwans);
+                    
+                    let pktZwyciezca = (offZwyciezca === typZwyciezca && offZwyciezca !== "") ? 1 : 0;
+                    let pktWynik = (mecz.wynikA === mojTyp.typA && mecz.wynikB === mojTyp.typB) ? 2 : 0;
+                    let sumaPkt = pktZwyciezca + pktWynik;
+                    
+                    if (sumaPkt === 3) {
+                        klasaKarty = "card-perfect";
+                        badgeHTML = '<span class="status-badge badge-perfect">🏆 +3 pkt (Idealny wynik!)</span>';
+                    } else if (sumaPkt === 1) {
+                        klasaKarty = "card-partial";
+                        badgeHTML = '<span class="status-badge badge-partial">🔥 +1 pkt (Trafiony zwycięzca)</span>';
+                    } else {
+                        klasaKarty = "card-missed";
+                        badgeHTML = '<span class="status-badge badge-missed">❌ 0 pkt (Nietrafiony)</span>';
+                    }
+                }
+                
+                const htmlZakonczone = `
+                    <div class="match-card ${klasaKarty}">
+                        <div class="match-time" style="color: #cbd5e0; opacity: 0.5;">KONIEC SPOTKANIA</div>
+                        <div class="teams">${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}</div>
+                        <div style="font-size: 26px; font-weight: 900; color: #E2C275; margin: 12px 0; letter-spacing: 1px;">${wynikTekst}</div>
+                        <div style="font-size: 15px; color: #cbd5e0; margin-bottom: 5px;">Twój typ: <strong style="color:white; font-size: 16px;">${typTekst}</strong></div>
+                        ${badgeHTML}
+                    </div>
+                `;
+                containerZakonczone.innerHTML += htmlZakonczone;
+            } 
+            // WARIANT B: MECZ AKTYWNY LUB W TRAKCIE (BRAK WYNIKU W GOOGLE SHEETS)
+            else {
+                licznikAktywnych++;
+                
+                let zablokowany = false;
+                if (mecz.dataRozpoczecia) {
+                    const czasMeczu = new Date(mecz.dataRozpoczecia);
+                    // Blokada dokładnie 1 godzinę (1 * 60 * 60 * 1000 milisekund) przed meczem
+                    const godzinaPrzedMeczem = czasMeczu - (1 * 60 * 60 * 1000);
+                    if (teraz > godzinaPrzedMeczem) zablokowany = true;
+                }
 
                 let html = '';
 
-                // Jeśli mecz się rozpoczął (zablokowany), generujemy listę typów
                 if (zablokowany) {
                     let typyGraczyHTML = '<div class="bets-list">';
                     typyGraczyHTML += '<h4 style="color:#E2C275; margin-top:0; margin-bottom: 15px; text-align:center; font-size: 14px; letter-spacing: 1px;">TYPY GRACZY:</h4>';
                     
                     if (mecz.typy && mecz.typy.length > 0) {
                         mecz.typy.forEach(t => {
-                            let awans = (t.typA === t.typB && t.typAwans) ? `<span class="bet-awans">(Awans: ${t.typAwans})</span>` : '';
+                            let ktoAwans = (t.typAwans === 'A') ? mecz.zespolA : (t.typAwans === 'B' ? mecz.zespolB : '');
+                            let awansInfo = (t.typA === t.typB && ktoAwans) ? `<span class="bet-awans">(Awans: ${ktoAwans})</span>` : '';
                             typyGraczyHTML += `
                                 <div class="bet-item">
                                     <span class="bet-name">👤 ${t.imie}</span>
-                                    <span class="bet-score">${t.typA} : ${t.typB}${awans}</span>
+                                    <span class="bet-score">${t.typA} : ${t.typB}${awansInfo}</span>
                                 </div>
                             `;
                         });
@@ -188,44 +279,67 @@
                         <div class="match-card">
                             <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
                             <div class="teams">${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}</div>
-                            <div class="locked-msg">🔒 MECZ ROZPOCZĘTY - TYPOWANIE ZABLOKOWANE</div>
+                            <div class="locked-msg">🔒 MECZ ROZPOCZĘTY - TYPOWANIE ZAMKNIĘTE</div>
                             ${typyGraczyHTML}
                         </div>
                     `;
                 } 
-                // W przeciwnym razie pokazujemy standardowe pola do typowania
                 else {
+                    let mojTyp = mecz.typy.find(t => t.imie === aktualnyGracz);
+                    let valA = mojTyp ? mojTyp.typA : '';
+                    let valB = mojTyp ? mojTyp.typB : '';
+                    let valAwans = mojTyp ? mojTyp.typAwans : '';
+                    
+                    let infoOObecnymTypie = '';
+                    if (mojTyp) {
+                        let nazwaAwansu = (valAwans === 'A') ? mecz.zespolA : mecz.zespolB;
+                        let awansTekst = (valA === valB && valAwans) ? `<br><span style="font-size: 12px; font-weight: normal; color: #9ae6b4;">(Wskazany awans: ${nazwaAwansu})</span>` : '';
+                        infoOObecnymTypie = `
+                            <div class="my-bet-info">
+                                ✅ Twój zapisany typ to: <span style="font-size: 18px;">${valA} : ${valB}</span> ${awansTekst}
+                            </div>
+                        `;
+                    }
+
+                    let awansClass = (valA !== '' && valB !== '' && valA === valB) ? 'awans-sekcja' : 'awans-sekcja hidden';
+
                     html = `
                         <div class="match-card">
                             <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
                             <div class="teams">${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}</div>
                             
+                            ${infoOObecnymTypie}
+                            
                             <div>
-                                <input type="number" id="typA_${mecz.id}" class="wynik-input" min="0" oninput="sprawdzRemis('${mecz.id}')">
+                                <input type="number" id="typA_${mecz.id}" class="wynik-input" min="0" value="${valA}" oninput="sprawdzRemis('${mecz.id}')">
                                 <span style="font-weight:bold; font-size: 20px; margin: 0 10px; color: #a0aec0;">:</span>
-                                <input type="number" id="typB_${mecz.id}" class="wynik-input" min="0" oninput="sprawdzRemis('${mecz.id}')">
+                                <input type="number" id="typB_${mecz.id}" class="wynik-input" min="0" value="${valB}" oninput="sprawdzRemis('${mecz.id}')">
                             </div>
                             
-                            <div id="awans_sekcja_${mecz.id}" class="awans-sekcja hidden">
+                            <div id="awans_sekcja_${mecz.id}" class="${awansClass}">
                                 <label style="font-weight: bold; color: #E2C275;">REMIS! Kto wygra w rzutach karnych?</label><br>
                                 <select id="awans_${mecz.id}" style="margin-top: 10px;">
                                     <option value="">-- Wybierz awansującego --</option>
-                                    <option value="A">${mecz.zespolA}</option>
-                                    <option value="B">${mecz.zespolB}</option>
+                                    <option value="A" ${valAwans === 'A' ? 'selected' : ''}>${mecz.zespolA}</option>
+                                    <option value="B" ${valAwans === 'B' ? 'selected' : ''}>${mecz.zespolB}</option>
                                 </select>
                             </div>
                             
-                            <button onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">Zatwierdź Kupon</button>
+                            <button onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
                         </div>
                     `;
                 }
 
-                container.innerHTML += html;
+                containerAktywne.innerHTML += html;
             }
         });
 
-        if(container.innerHTML === "") {
-            container.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Wszystkie mecze rozegrane!</p>";
+        // Obsługa komunikatów o braku meczów w danej sekcji
+        if(licznikAktywnych === 0) {
+            containerAktywne.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Brak nadchodzących meczów do typowania!</p>";
+        }
+        if(licznikZakonczonych === 0) {
+            containerZakonczone.innerHTML = "<p style='text-align:center; color: #718096; font-size: 14px;'>Żaden mecz nie został jeszcze rozegrany.</p>";
         }
     }
 
@@ -270,12 +384,11 @@
             przycisk.innerText = "Kupon Zatwierdzony ✅";
             przycisk.style.background = "#27ae60"; 
             przycisk.style.color = "white";
+            
             setTimeout(() => { 
-                przycisk.innerText = "Zmień Kupon"; 
-                przycisk.disabled = false; 
-                przycisk.style.background = "linear-gradient(135deg, #d4af37 0%, #aa8222 100%)"; 
-                przycisk.style.color = "#000";
-            }, 3000);
+                pobierzDaneCicho(); 
+            }, 1000);
+            
         } catch (error) {
             alert("Błąd zapisu.");
             przycisk.innerText = "Spróbuj ponownie";
