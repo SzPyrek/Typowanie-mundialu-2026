@@ -151,11 +151,16 @@
         mecze.forEach(mecz => {
             if (mecz.wynikA === "" || mecz.wynikB === "") {
                 
-                let zablokowany = false;
-                if (mecz.dataRozpoczecia) {
-                    const czasMeczu = new Date(mecz.dataRozpoczecia);
-                    if (teraz > czasMeczu) zablokowany = true;
-                }
+        let zablokowany = false;
+        if (mecz.dataRozpoczecia) {
+        const czasMeczu = new Date(mecz.dataRozpoczecia);
+        // 1 * 60 * 60 * 1000 oznacza: 1 godzina * 60 minut * 60 sekund * 1000 milisekund
+        const godzinaPrzedMeczem = czasMeczu - (1 * 60 * 60 * 1000); 
+    
+        if (teraz > godzinaPrzedMeczem) {
+            zablokowany = true;
+        }
+        }
 
                 let html = '';
 
