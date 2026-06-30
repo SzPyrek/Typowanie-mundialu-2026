@@ -5,8 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Typer Mundial 2026 - Knockouts</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: radial-gradient(circle at 50% 0%, #1c2a43 0%, #07090e 100%); background-attachment: fixed; color: #ffffff; margin: 0; padding: 20px; }
-        .container { max-width: 650px; margin: 0 auto; background: rgba(15, 23, 42, 0.7); padding: 30px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(226, 194, 117, 0.2); backdrop-filter: blur(10px); position: relative; }
+        /* ========================================= */
+        /* STYL GŁÓWNY (TŁO)                         */
+        /* ========================================= */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: radial-gradient(circle at 50% 0%, #1c2a43 0%, #07090e 100%); 
+            background-attachment: fixed; 
+            color: #ffffff; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh;
+        }
+        
+        /* ========================================= */
+        /* MENU NAWIGACYJNE DO ZMIANY STRON          */
+        /* ========================================= */
+        .main-nav {
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+            margin-bottom: 30px;
+        }
+        .main-nav button {
+            background: rgba(0,0,0,0.5); 
+            color: #a0aec0; 
+            border: 1px solid #4a5568; 
+            padding: 12px 30px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: 0.3s;
+        }
+        .main-nav button:hover { background: rgba(226,194,117,0.1); color: #E2C275; }
+        .main-nav button.active { background: linear-gradient(135deg, #d4af37 0%, #aa8222 100%); color: #000; border-color: #d4af37; }
+
+        /* ========================================= */
+        /* STYLE DLA SEKCJI TYPERA                   */
+        /* ========================================= */
+        .container { 
+            max-width: 650px; 
+            margin: 0 auto; 
+            background: rgba(15, 23, 42, 0.7); 
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            border: 1px solid rgba(226, 194, 117, 0.2); 
+            backdrop-filter: blur(10px); 
+            position: relative; 
+        }
         .user-badge { position: absolute; top: 20px; right: 20px; font-size: 14px; color: #E2C275; background: rgba(226, 194, 117, 0.1); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(226, 194, 117, 0.3); font-weight: bold; letter-spacing: 0.5px; }
         h1 { text-align: center; color: #E2C275; margin-bottom: 5px; font-size: 2.8em; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 10px rgba(226, 194, 117, 0.3); }
         .subtitle { text-align: center; font-size: 1.2rem; margin-top: 0; margin-bottom: 30px; color: #a0aec0; text-transform: uppercase; letter-spacing: 4px;}
@@ -15,19 +63,19 @@
         select option { background: #131b2c; color: white; }
         input[type="number"]:focus, input[type="password"]:focus, select:focus { border-color: #E2C275; outline: none; box-shadow: 0 0 10px rgba(226, 194, 117, 0.2); }
         .wynik-input { width: 65px !important; font-weight: bold; font-size: 20px; display: inline-block; }
-        button { background: linear-gradient(135deg, #d4af37 0%, #aa8222 100%); color: #000; border: none; padding: 15px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.1s, filter 0.3s; }
-        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
-        button:disabled { background: #2d3748; color: #718096; cursor: not-allowed; transform: none; }
+        .action-btn { background: linear-gradient(135deg, #d4af37 0%, #aa8222 100%); color: #000; border: none; padding: 15px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.1s, filter 0.3s; }
+        .action-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .action-btn:disabled { background: #2d3748; color: #718096; cursor: not-allowed; transform: none; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2); }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { background-color: rgba(226, 194, 117, 0.1); color: #E2C275; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; border-bottom: 2px solid #E2C275; }
         tr:hover { background-color: rgba(255,255,255,0.05); }
         
-        /* STYLE DLA KART MECZÓW */
         .match-card { background: linear-gradient(145deg, #131b2c 0%, #0d121d 100%); border: 1px solid rgba(226, 194, 117, 0.15); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .teams { font-weight: 800; font-size: 22px; margin-bottom: 15px; color: #ffffff; letter-spacing: 1px;}
         .match-time { font-size: 12px; color: #E2C275; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .awans-sekcja { margin-top: 15px; background: rgba(226, 194, 117, 0.05); border: 1px dashed #E2C275; padding: 15px; border-radius: 8px; }
         .locked-msg { color: #fc8181; font-weight: bold; margin-top: 15px; margin-bottom: 15px; text-align: center; letter-spacing: 0.5px; }
         
@@ -43,40 +91,78 @@
         
         .my-bet-info { background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.5); color: #48bb78; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
         
-        /* NOWE STYLE SPECJALNIE DLA HISTORII ROZEGRANYCH MECZÓW */
         .section-title { color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; margin-top: 40px; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; }
         
-        /* Kolorowanie zakończonych kuponów (delikatny neonowy blask pasujący do mrocznego stylu) */
         .card-perfect { border: 2px solid #2ecc71 !important; background: linear-gradient(145deg, #0e2417 0%, #08140d 100%) !important; box-shadow: 0 4px 20px rgba(46, 204, 113, 0.15); }
         .card-partial { border: 2px solid #e67e22 !important; background: linear-gradient(145deg, #2c1a0c 0%, #170d06 100%) !important; box-shadow: 0 4px 20px rgba(230, 126, 34, 0.15); }
         .card-missed { border: 2px solid #e74c3c !important; background: linear-gradient(145deg, #2a1111 0%, #150808 100%) !important; box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15); }
         
-        /* Ładne statusy-odznaki na dole rozliczonych kuponów */
         .status-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge-perfect { background: #2ecc71; color: #000; }
         .badge-partial { background: #e67e22; color: #000; }
         .badge-missed { background: #e74c3c; color: #fff; }
+
+        /* ========================================= */
+        /* STYLE DLA DRABINKI (ZE SKALOWANIEM)       */
+        /* ========================================= */
+        #strona-drabinka {
+            width: 100%;
+            text-align: center;
+            overflow-x: auto; /* Pozwala przewijać palcem na najmniejszych telefonach */
+        }
+        .bracket { 
+            display: inline-flex; 
+            gap: 25px; 
+            align-items: stretch; 
+            height: 950px; 
+            margin: 0 auto;
+            width: max-content; 
+            padding-bottom: 20px;
+            
+            /* --- NOWA, LEPSZA METODA SKALOWANIA --- */
+            zoom: 0.75; /* Skurczy drabinkę ORAZ jej fizyczne miejsce. Możesz dać np. 0.8 lub 0.6 */
+        }   
+        .round { display: flex; flex-direction: column; justify-content: space-around; }
+        .finals-col { justify-content: center; gap: 50px; }
+        .match { background-color: #2a2a2a; border: 2px solid #d4af37; border-radius: 8px; padding: 8px; width: 170px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .team { display: flex; align-items: center; cursor: pointer; padding: 6px; border-radius: 4px; transition: 0.2s; user-select: none; font-size: 14px; font-weight: bold; color: white;}
+        .team:hover { background-color: #444; }
+        .eliminated { opacity: 0.3; text-decoration: line-through; filter: grayscale(100%); }
+        .flag { width: 24px; height: 18px; margin-right: 10px; border-radius: 2px; object-fit: cover; }
+        .emoji-icon { font-size: 16px; margin-right: 10px; width: 24px; text-align: center; }
+        .match-title { text-align: center; font-size: 11px; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; margin-bottom: -4px; }
+        .reset-btn { padding: 12px 30px; background-color: #d4af37; color: #121212; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 40px; }
+        .reset-btn:hover { background-color: #b5952f; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="user-badge" class="user-badge hidden"></div>
+<div id="loader">Wczytywanie aplikacji... ⚽</div>
 
+<div id="login-section" class="container hidden">
     <h1>KNOCKOUTS</h1>
     <div class="subtitle">Typer Mundial 2026</div>
+    <h2 style="text-align: center; color: #E2C275; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 15px;">Wybierz swój profil</h2>
+    <select id="user-select"></select>
+    <input type="password" id="pin-input" placeholder="Wpisz swój 4-cyfrowy PIN">
+    <button class="action-btn" onclick="zaloguj()">Rozpocznij grę</button>
+</div>
 
-    <div id="loader">Wczytywanie aplikacji... ⚽</div>
-
-    <div id="login-section" class="hidden">
-        <h2 style="text-align: center; color: #E2C275; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 15px;">Wybierz swój profil</h2>
-        <select id="user-select"></select>
-        <input type="password" id="pin-input" placeholder="Wpisz swój 4-cyfrowy PIN">
-        <button onclick="zaloguj()">Rozpocznij grę</button>
+<div id="app-section" class="hidden">
+    
+    <!-- MENU GŁÓWNE -->
+    <div class="main-nav">
+        <button id="nav-typer" class="active" onclick="zmienStronę('typer')">📝 TYPER</button>
+        <button id="nav-drabinka" onclick="zmienStronę('drabinka')">🏆 DRABINKA</button>
     </div>
 
-    <div id="app-section" class="hidden">
-        <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; text-transform: uppercase; font-size: 1.2rem;">Tabela Wyników</h2>
+    <!-- STRONA 1: TYPER -->
+    <div id="strona-typer" class="container">
+        <div id="user-badge" class="user-badge"></div>
+        <h1>KNOCKOUTS</h1>
+        <div class="subtitle">Typer Mundial 2026</div>
+
+        <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; text-transform: uppercase; font-size: 1.2rem; margin-top:0;">Tabela Wyników</h2>
         <table>
             <thead>
                 <tr><th>Pozycja</th><th>Gracz</th><th>Punkty</th></tr>
@@ -89,6 +175,158 @@
 
         <h2 class="section-title">Rozegrane Mecze (Historia)</h2>
         <div id="mecze-zakonczone-container"></div>
+    </div>
+
+    <!-- STRONA 2: DRABINKA -->
+    <div id="strona-drabinka" class="hidden">
+        <div class="bracket">
+            <div class="round">
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/de.png" class="flag" alt="Niemcy"> Niemcy</div>
+                <div class="team"><img src="https://flagcdn.com/w40/py.png" class="flag" alt="Paragwaj"> Paragwaj</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/fr.png" class="flag" alt="Francja"> Francja</div>
+                <div class="team"><img src="https://flagcdn.com/w40/se.png" class="flag" alt="Szwecja"> Szwecja</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/za.png" class="flag" alt="RPA"> RPA</div>
+                <div class="team"><img src="https://flagcdn.com/w40/ca.png" class="flag" alt="Kanada"> Kanada</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/nl.png" class="flag" alt="Holandia"> Holandia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/ma.png" class="flag" alt="Maroko"> Maroko</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/pt.png" class="flag" alt="Portugalia"> Portugalia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/hr.png" class="flag" alt="Chorwacja"> Chorwacja</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/es.png" class="flag" alt="Hiszpania"> Hiszpania</div>
+                <div class="team"><img src="https://flagcdn.com/w40/at.png" class="flag" alt="Austria"> Austria</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/us.png" class="flag" alt="USA"> USA</div>
+                <div class="team"><img src="https://flagcdn.com/w40/ba.png" class="flag" alt="Bośnia"> Bośnia i Herc.</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/be.png" class="flag" alt="Belgia"> Belgia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/sn.png" class="flag" alt="Senegal"> Senegal</div>
+                </div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/py.png" class="flag" alt="Paragwaj"> Paragwaj</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca L2</div>
+                </div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/ca.png" class="flag" alt="Kanada"> Kanada</div>
+                <div class="team"><img src="https://flagcdn.com/w40/ma.png" class="flag" alt="Maroko"> Maroko</div>
+                </div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca L5</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca L6</div>
+                </div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca L7</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca L8</div>
+                </div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div></div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div></div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/4</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/4</div></div>
+            </div>
+            
+            <div class="round finals-col">
+                <div class="match">
+                  <div class="match-title">Finał</div>
+                  <div class="team"><span class="emoji-icon">🏆</span> Finalista Lewy</div>
+                  <div class="team"><span class="emoji-icon">🏆</span> Finalista Prawy</div>
+                </div>
+                <div class="match">
+                  <div class="match-title">O 3. Miejsce</div>
+                  <div class="team"><span class="emoji-icon">🥉</span> Przegrany Lewy</div>
+                  <div class="team"><span class="emoji-icon">🥉</span> Przegrany Prawy</div>
+                </div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/4</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/4</div></div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div></div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca 1/8</div></div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/br.png" class="flag" alt="Brazylia"> Brazylia</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P2</div>
+                </div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P3</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P4</div>
+                </div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P5</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P6</div>
+                </div>
+                <div class="match">
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P7</div>
+                <div class="team"><span class="emoji-icon">❓</span> Zwycięzca P8</div>
+                </div>
+            </div>
+            
+            <div class="round">
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/br.png" class="flag" alt="Brazylia"> Brazylia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/jp.png" class="flag" alt="Japonia"> Japonia</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/ci.png" class="flag" alt="WKS"> WKS</div>
+                <div class="team"><img src="https://flagcdn.com/w40/no.png" class="flag" alt="Norwegia"> Norwegia</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/mx.png" class="flag" alt="Meksyk"> Meksyk</div>
+                <div class="team"><img src="https://flagcdn.com/w40/ec.png" class="flag" alt="Ekwador"> Ekwador</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/gb-eng.png" class="flag" alt="Anglia"> Anglia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/cd.png" class="flag" alt="DR Konga"> DR Konga</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/ar.png" class="flag" alt="Argentyna"> Argentyna</div>
+                <div class="team"><img src="https://flagcdn.com/w40/cv.png" class="flag" alt="Rep. Ziel. Przyl."> Rep. Ziel. Przyl.</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/au.png" class="flag" alt="Australia"> Australia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/eg.png" class="flag" alt="Egipt"> Egipt</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/ch.png" class="flag" alt="Szwajcaria"> Szwajcaria</div>
+                <div class="team"><img src="https://flagcdn.com/w40/dz.png" class="flag" alt="Algieria"> Algieria</div></div>
+                <div class="match">
+                <div class="team"><img src="https://flagcdn.com/w40/co.png" class="flag" alt="Kolumbia"> Kolumbia</div>
+                <div class="team"><img src="https://flagcdn.com/w40/gh.png" class="flag" alt="Ghana"> Ghana</div></div>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="reset-btn" onclick="resetBracket()">Zresetuj pamięć drabinki</button>
+        </div>
     </div>
 </div>
 
@@ -104,8 +342,61 @@
 
     window.onload = function() {
         pobierzDaneNaStart();
+        inicjalizujDrabinke(); 
     };
 
+    // ==========================================
+    // LOGIKA ZMIANY STRON
+    // ==========================================
+    function zmienStronę(nazwa) {
+        document.getElementById('nav-typer').classList.remove('active');
+        document.getElementById('nav-drabinka').classList.remove('active');
+        
+        document.getElementById('strona-typer').classList.add('hidden');
+        document.getElementById('strona-drabinka').classList.add('hidden');
+        
+        document.getElementById(`nav-${nazwa}`).classList.add('active');
+        document.getElementById(`strona-${nazwa}`).classList.remove('hidden');
+    }
+
+    // ==========================================
+    // LOGIKA DRABINKI (PAMIĘĆ PRZEGLĄDARKI)
+    // ==========================================
+    function inicjalizujDrabinke() {
+        const teams = document.querySelectorAll('.team');
+        const savedState = JSON.parse(localStorage.getItem('bracketEliminations')) || {};
+
+        teams.forEach((team, index) => {
+            if (savedState[index]) {
+                team.classList.add('eliminated');
+            }
+            team.addEventListener('click', () => {
+                team.classList.toggle('eliminated');
+                zapiszStanDrabinki();
+            });
+        });
+    }
+
+    function zapiszStanDrabinki() {
+        const currentState = {};
+        document.querySelectorAll('.team').forEach((team, index) => {
+            if (team.classList.contains('eliminated')) {
+                currentState[index] = true;
+            }
+        });
+        localStorage.setItem('bracketEliminations', JSON.stringify(currentState));
+    }
+
+    function resetBracket() {
+        if(confirm("Czy na pewno chcesz zresetować wszystkie przekreślenia na drabince?")) {
+            document.querySelectorAll('.team').forEach(team => team.classList.remove('eliminated'));
+            localStorage.removeItem('bracketEliminations');
+        }
+    }
+
+    // ==========================================
+    // LOGIKA TYPERA (ŁĄCZENIE Z BAZĄ DANYCH)
+    // ==========================================
     async function pobierzDaneNaStart() {
         try {
             const response = await fetch(API_URL);
@@ -186,8 +477,6 @@
         let licznikZakonczonych = 0;
 
         mecze.forEach(mecz => {
-            
-            // WARIANT A: MECZ ZAKOŃCZONY (SĄ WPISANE WYNIKI W GOOGLE SHEETS)
             if (mecz.wynikA !== "" && mecz.wynikB !== "") {
                 licznikZakonczonych++;
                 
@@ -210,7 +499,6 @@
                         typTekst += ` (Awans: ${tKtoAwans})`;
                     }
                     
-                    // Matematyka punktacji na żywo na stronie, by określić kolor kuponu
                     let offZwyciezca = mecz.wynikA > mecz.wynikB ? 'A' : (mecz.wynikB > mecz.wynikA ? 'B' : mecz.awans);
                     let typZwyciezca = mojTyp.typA > mojTyp.typB ? 'A' : (mojTyp.typB > mojTyp.typA ? 'B' : mojTyp.typAwans);
                     
@@ -241,14 +529,12 @@
                 `;
                 containerZakonczone.innerHTML += htmlZakonczone;
             } 
-            // WARIANT B: MECZ AKTYWNY LUB W TRAKCIE (BRAK WYNIKU W GOOGLE SHEETS)
             else {
                 licznikAktywnych++;
                 
                 let zablokowany = false;
                 if (mecz.dataRozpoczecia) {
                     const czasMeczu = new Date(mecz.dataRozpoczecia);
-                    // Blokada dokładnie 1 godzinę (1 * 60 * 60 * 1000 milisekund) przed meczem
                     const godzinaPrzedMeczem = czasMeczu - (1 * 60 * 60 * 1000);
                     if (teraz > godzinaPrzedMeczem) zablokowany = true;
                 }
@@ -325,7 +611,7 @@
                                 </select>
                             </div>
                             
-                            <button onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
+                            <button class="action-btn" onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
                         </div>
                     `;
                 }
@@ -334,7 +620,6 @@
             }
         });
 
-        // Obsługa komunikatów o braku meczów w danej sekcji
         if(licznikAktywnych === 0) {
             containerAktywne.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Brak nadchodzących meczów do typowania!</p>";
         }
