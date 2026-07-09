@@ -71,6 +71,10 @@
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { background-color: rgba(226, 194, 117, 0.1); color: #E2C275; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; border-bottom: 2px solid #E2C275; }
         tr:hover { background-color: rgba(255,255,255,0.05); }
+        /* ZAKŁADKI TABEL */
+        .table-toggle { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 10px;}
+        .table-btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; background: transparent; color: #a0aec0;}
+        .table-btn.active { background: #E2C275; color: #000; }
         
         .match-card { background: linear-gradient(145deg, #131b2c 0%, #0d121d 100%); border: 1px solid rgba(226, 194, 117, 0.15); padding: 25px 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .teams { font-weight: 800; font-size: 22px; margin-bottom: 15px; color: #ffffff; letter-spacing: 1px;}
@@ -162,7 +166,10 @@
         <h1>KNOCKOUTS</h1>
         <div class="subtitle">Typer Mundial 2026</div>
 
-        <h2 style="color: #E2C275; border-bottom: 1px solid rgba(226,194,117,0.3); padding-bottom: 10px; text-transform: uppercase; font-size: 1.2rem; margin-top:0;">Tabela Wyników</h2>
+        <div class="table-toggle">
+            <button class="table-btn active" id="btn-klas" onclick="zmienTabele('klasyczna')">Tabela Klasyczna</button>
+            <button class="table-btn" id="btn-alt" onclick="zmienTabele('alternatywna')">Tabela Progresywna</button>
+        </div>
         <table>
             <thead>
                 <tr><th>Pozycja</th><th>Gracz</th><th>Punkty</th></tr>
@@ -347,11 +354,13 @@
     // ==========================================
     // TUTAJ WKLEJ SWÓJ LINK DO SKRYPTU GOOGLE:
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbxuOT8RzqyHnNYYWGjg417eSfbJcSg4PpHdcgj0Rj_JBBRAzIFk9DDIhMFEGCnCyClZww/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyTTeKjQTj5nq6CTGIHV3bEDhMRH8Zu4hDyzd25Aph3m1gkR4D6BeEYQ5gtwr6GVXOHNw/exec"; 
     
     let aktualnyPin = "";
     let aktualnyGracz = ""; 
     let globalneMecze = [];
+    let globalnyRankingKlasyczny = [];
+    let globalnyRankingAlternatywny = [];
 
     window.onload = function() {
         pobierzDaneNaStart();
@@ -407,33 +416,6 @@
         }
     }
 
-    // ==========================================
-    // LOGIKA TYPERA (ŁĄCZENIE Z BAZĄ DANYCH)
-    // ==========================================
-    async function pobierzDaneNaStart() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            globalneMecze = data.mecze;
-            
-            renderujRanking(data.ranking);
-            zbudujListeGraczy(data.ranking);
-            
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('login-section').classList.remove('hidden');
-        } catch (error) {
-            document.getElementById('loader').innerText = "Błąd połączenia z bazą danych. Odśwież stronę.";
-        }
-    }
-
-    async function pobierzDaneCicho() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            globalneMecze = data.mecze;
-            renderujMecze(globalneMecze);
-        } catch (e) { console.log("Błąd odświeżania w tle", e); }
-    }
 
     function zbudujListeGraczy(ranking) {
         const select = document.getElementById('user-select');
@@ -478,6 +460,68 @@
         return d.toLocaleDateString('pl-PL', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'});
     }
 
+
+
+    function sprawdzRemis(idMeczu) {
+        const typA = document.getElementById(`typA_${idMeczu}`).value;
+        const typB = document.getElementById(`typB_${idMeczu}`).value;
+        const sekcjaAwansu = document.getElementById(`awans_sekcja_${idMeczu}`);
+
+        if (typA !== "" && typB !== "" && typA === typB) {
+            sekcjaAwansu.classList.remove('hidden');
+        } else {
+            sekcjaAwansu.classList.add('hidden');
+            document.getElementById(`awans_${idMeczu}`).value = ""; 
+        }
+    }
+
+function zmienTabele(typ) {
+        document.getElementById('btn-klas').classList.remove('active');
+        document.getElementById('btn-alt').classList.remove('active');
+        if (typ === 'klasyczna') {
+            document.getElementById('btn-klas').classList.add('active');
+            renderujRanking(globalnyRankingKlasyczny);
+        } else {
+            document.getElementById('btn-alt').classList.add('active');
+            renderujRanking(globalnyRankingAlternatywny);
+        }
+    }
+
+    async function pobierzDaneNaStart() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            globalneMecze = data.mecze;
+            globalnyRankingKlasyczny = data.rankingKlasyczny;
+            globalnyRankingAlternatywny = data.rankingAlternatywny;
+            
+            renderujRanking(globalnyRankingKlasyczny);
+            zbudujListeGraczy(globalnyRankingKlasyczny);
+            
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+        } catch (error) {
+            document.getElementById('loader').innerText = "Błąd połączenia z bazą danych. Odśwież stronę.";
+        }
+    }
+
+    async function pobierzDaneCicho() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            globalneMecze = data.mecze;
+            globalnyRankingKlasyczny = data.rankingKlasyczny;
+            globalnyRankingAlternatywny = data.rankingAlternatywny;
+            
+            if (document.getElementById('btn-klas').classList.contains('active')) {
+                renderujRanking(globalnyRankingKlasyczny);
+            } else {
+                renderujRanking(globalnyRankingAlternatywny);
+            }
+            renderujMecze(globalneMecze);
+        } catch (e) { console.log("Błąd odświeżania w tle", e); }
+    }
+
     function renderujMecze(mecze) {
         const containerAktywne = document.getElementById('mecze-container');
         const containerZakonczone = document.getElementById('mecze-zakonczone-container');
@@ -490,53 +534,83 @@
         let licznikZakonczonych = 0;
 
         mecze.forEach(mecz => {
-            if (mecz.wynikA !== "" && mecz.wynikB !== "") {
+            let meczZakonczony = false;
+            if (mecz.faza === "MISTRZ") {
+                if (mecz.awans !== "") meczZakonczony = true;
+            } else {
+                if (mecz.wynikA !== "" && mecz.wynikB !== "") meczZakonczony = true;
+            }
+
+            if (meczZakonczony) {
                 licznikZakonczonych++;
-                
                 let mojTyp = mecz.typy.find(t => t.imie === aktualnyGracz);
                 
-                let wynikTekst = `${mecz.wynikA} : ${mecz.wynikB}`;
-                let offKtoAwans = mecz.awans === 'A' ? mecz.zespolA : (mecz.awans === 'B' ? mecz.zespolB : '');
-                if (mecz.wynikA === mecz.wynikB && offKtoAwans) {
-                    wynikTekst += ` (Awans: ${offKtoAwans})`;
-                }
-                
+                let wynikTekst = "";
                 let typTekst = "Brak typu";
                 let klasaKarty = "card-missed";
                 let badgeHTML = '<span class="status-badge badge-missed">❌ 0 pkt (Brak typu)</span>';
-                
-                if (mojTyp) {
-                    typTekst = `${mojTyp.typA} : ${mojTyp.typB}`;
-                    let tKtoAwans = mojTyp.typAwans === 'A' ? mecz.zespolA : (mojTyp.typAwans === 'B' ? mecz.zespolB : '');
-                    if (mojTyp.typA === mojTyp.typB && tKtoAwans) {
-                        typTekst += ` (Awans: ${tKtoAwans})`;
+
+                if (mecz.faza === "MISTRZ") {
+                    wynikTekst = `Mistrz: ${mecz.awans}`;
+                    if (mojTyp) {
+                        typTekst = `Twój typ: ${mojTyp.typAwans}`;
+                        if (mojTyp.typAwans.toLowerCase() === mecz.awans.toLowerCase()) {
+                            klasaKarty = "card-perfect";
+                            badgeHTML = '<span class="status-badge badge-perfect">🏆 +5 pkt do Tabeli Progresywnej!</span>';
+                        } else {
+                            klasaKarty = "card-missed";
+                            badgeHTML = '<span class="status-badge badge-missed">❌ Nietrafiony</span>';
+                        }
                     }
+                } 
+                else {
+                    wynikTekst = `${mecz.wynikA} : ${mecz.wynikB}`;
+                    let offKtoAwans = mecz.awans === 'A' ? mecz.zespolA : (mecz.awans === 'B' ? mecz.zespolB : '');
+                    if (mecz.wynikA === mecz.wynikB && offKtoAwans) wynikTekst += ` (Awans: ${offKtoAwans})`;
                     
-                    let offZwyciezca = mecz.wynikA > mecz.wynikB ? 'A' : (mecz.wynikB > mecz.wynikA ? 'B' : mecz.awans);
-                    let typZwyciezca = mojTyp.typA > mojTyp.typB ? 'A' : (mojTyp.typB > mojTyp.typA ? 'B' : mojTyp.typAwans);
-                    
-                    let pktZwyciezca = (offZwyciezca === typZwyciezca && offZwyciezca !== "") ? 1 : 0;
-                    let pktWynik = (mecz.wynikA === mojTyp.typA && mecz.wynikB === mojTyp.typB) ? 2 : 0;
-                    let sumaPkt = pktZwyciezca + pktWynik;
-                    
-                    if (sumaPkt === 3) {
-                        klasaKarty = "card-perfect";
-                        badgeHTML = '<span class="status-badge badge-perfect">🏆 +3 pkt (Idealny wynik!)</span>';
-                    } else if (sumaPkt === 1) {
-                        klasaKarty = "card-partial";
-                        badgeHTML = '<span class="status-badge badge-partial">🔥 +1 pkt (Trafiony zwycięzca)</span>';
-                    } else {
-                        klasaKarty = "card-missed";
-                        badgeHTML = '<span class="status-badge badge-missed">❌ 0 pkt (Nietrafiony)</span>';
+                    if (mojTyp) {
+                        typTekst = `${mojTyp.typA} : ${mojTyp.typB}`;
+                        let tKtoAwans = mojTyp.typAwans === 'A' ? mecz.zespolA : (mojTyp.typAwans === 'B' ? mecz.zespolB : '');
+                        if (mojTyp.typA === mojTyp.typB && tKtoAwans) typTekst += ` (Awans: ${tKtoAwans})`;
+                        
+                        let offZwyciezca = mecz.wynikA > mecz.wynikB ? 'A' : (mecz.wynikB > mecz.wynikA ? 'B' : mecz.awans);
+                        let typZwyciezca = mojTyp.typA > mojTyp.typB ? 'A' : (mojTyp.typB > mojTyp.typA ? 'B' : mojTyp.typAwans);
+                        
+                        let hitZwyc = (offZwyciezca === typZwyciezca && offZwyciezca !== "");
+                        let hitWynik = (mecz.wynikA === mojTyp.typA && mecz.wynikB === mojTyp.typB);
+                        
+                        let pktKlas = 0;
+                        if (hitZwyc) pktKlas += 1;
+                        if (hitWynik) pktKlas += 2;
+
+                        let pktAltZ = 1, pktAltW = 2;
+                        if (mecz.faza === "SF") { pktAltZ = 2; pktAltW = 3; }
+                        if (mecz.faza === "F" || mecz.faza === "3RD") { pktAltZ = 3; pktAltW = 4; }
+                        let pktAlt = 0;
+                        if (hitZwyc) pktAlt += pktAltZ;
+                        if (hitWynik) pktAlt += pktAltW;
+                        
+                        if (hitWynik) {
+                            klasaKarty = "card-perfect";
+                        } else if (hitZwyc) {
+                            klasaKarty = "card-partial";
+                        } else {
+                            klasaKarty = "card-missed";
+                        }
+                        
+                        let naglowekOdznaki = hitWynik ? "🏆 Trafiony Wynik!" : (hitZwyc ? "🔥 Trafiony Zwycięzca" : "❌ Nietrafiony");
+                        badgeHTML = `<span class="status-badge badge-${klasaKarty.split('-')[1]}">${naglowekOdznaki}<br><span style="font-size: 10px; opacity: 0.8; margin-top:3px; display:block;">KLASYCZNIE: +${pktKlas} PKT | PRO: +${pktAlt} PKT</span></span>`;
                     }
                 }
                 
+                let tytul = mecz.faza === "MISTRZ" ? "Typowanie Mistrza Świata" : `${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}`;
+
                 const htmlZakonczone = `
                     <div class="match-card ${klasaKarty}">
                         <div class="match-time" style="color: #cbd5e0; opacity: 0.5;">KONIEC SPOTKANIA</div>
-                        <div class="teams">${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}</div>
+                        <div class="teams">${tytul}</div>
                         <div style="font-size: 26px; font-weight: 900; color: #E2C275; margin: 12px 0; letter-spacing: 1px;">${wynikTekst}</div>
-                        <div style="font-size: 15px; color: #cbd5e0; margin-bottom: 5px;">Twój typ: <strong style="color:white; font-size: 16px;">${typTekst}</strong></div>
+                        <div style="font-size: 15px; color: #cbd5e0; margin-bottom: 5px;"><strong style="color:white; font-size: 16px;">${typTekst}</strong></div>
                         ${badgeHTML}
                     </div>
                 `;
@@ -553,31 +627,38 @@
                 }
 
                 let html = '';
+                let tytul = mecz.faza === "MISTRZ" ? "Kto zdobędzie Mistrzostwo Świata?" : `${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}`;
 
                 if (zablokowany) {
-                    let typyGraczyHTML = '<div class="bets-list">';
-                    typyGraczyHTML += '<h4 style="color:#E2C275; margin-top:0; margin-bottom: 15px; text-align:center; font-size: 14px; letter-spacing: 1px;">TYPY GRACZY:</h4>';
+                    let typyGraczyHTML = '<div class="bets-list"><h4 style="color:#E2C275; margin-top:0; margin-bottom: 15px; text-align:center; font-size: 14px; letter-spacing: 1px;">TYPY GRACZY:</h4>';
                     
                     if (mecz.typy && mecz.typy.length > 0) {
                         mecz.typy.forEach(t => {
-                            let ktoAwans = (t.typAwans === 'A') ? mecz.zespolA : (t.typAwans === 'B' ? mecz.zespolB : '');
-                            let awansInfo = (t.typA === t.typB && ktoAwans) ? `<span class="bet-awans">(Awans: ${ktoAwans})</span>` : '';
+                            let textPodgladu = "";
+                            if (mecz.faza === "MISTRZ") {
+                                textPodgladu = t.typAwans;
+                            } else {
+                                let ktoAwans = (t.typAwans === 'A') ? mecz.zespolA : (t.typAwans === 'B' ? mecz.zespolB : '');
+                                let awansInfo = (t.typA === t.typB && ktoAwans) ? `<span class="bet-awans">(Awans: ${ktoAwans})</span>` : '';
+                                textPodgladu = `${t.typA} : ${t.typB}${awansInfo}`;
+                            }
+
                             typyGraczyHTML += `
                                 <div class="bet-item">
                                     <span class="bet-name">👤 ${t.imie}</span>
-                                    <span class="bet-score">${t.typA} : ${t.typB}${awansInfo}</span>
+                                    <span class="bet-score">${textPodgladu}</span>
                                 </div>
                             `;
                         });
                     } else {
-                        typyGraczyHTML += '<div style="text-align:center; font-size: 14px; color:#718096;">Nikt nie zdążył obstawić tego meczu.</div>';
+                        typyGraczyHTML += '<div style="text-align:center; font-size: 14px; color:#718096;">Nikt nie zdążył obstawić.</div>';
                     }
                     typyGraczyHTML += '</div>';
 
                     html = `
                         <div class="match-card">
-                            <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
-                            <div class="teams">${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}</div>
+                            <div class="match-time">🕒 ${mecz.faza === "MISTRZ" ? "KONIEC CZASU NA ZAKŁADY" : "KICK-OFF: " + formatujDate(mecz.dataRozpoczecia)}</div>
+                            <div class="teams">${tytul}</div>
                             <div class="locked-msg">🔒 MECZ ROZPOCZĘTY - TYPOWANIE ZAMKNIĘTE</div>
                             ${typyGraczyHTML}
                         </div>
@@ -591,76 +672,78 @@
                     
                     let infoOObecnymTypie = '';
                     if (mojTyp) {
-                        let nazwaAwansu = (valAwans === 'A') ? mecz.zespolA : mecz.zespolB;
-                        let awansTekst = (valA === valB && valAwans) ? `<br><span style="font-size: 12px; font-weight: normal; color: #9ae6b4;">(Wskazany awans: ${nazwaAwansu})</span>` : '';
-                        infoOObecnymTypie = `
-                            <div class="my-bet-info">
-                                ✅ Twój zapisany typ to: <span style="font-size: 18px;">${valA} : ${valB}</span> ${awansTekst}
+                        if (mecz.faza === "MISTRZ") {
+                            infoOObecnymTypie = `<div class="my-bet-info">✅ Twój zapisany mistrz: <span style="font-size: 18px;">${valAwans}</span></div>`;
+                        } else {
+                            let nazwaAwansu = (valAwans === 'A') ? mecz.zespolA : mecz.zespolB;
+                            let awansTekst = (valA === valB && valAwans) ? `<br><span style="font-size: 12px; font-weight: normal; color: #9ae6b4;">(Wskazany awans: ${nazwaAwansu})</span>` : '';
+                            infoOObecnymTypie = `<div class="my-bet-info">✅ Twój zapisany typ to: <span style="font-size: 18px;">${valA} : ${valB}</span> ${awansTekst}</div>`;
+                        }
+                    }
+
+                    if (mecz.faza === "MISTRZ") {
+                        let opcje = mecz.zespolB.split(',').map(d => `<option value="${d.trim()}" ${valAwans === d.trim() ? 'selected' : ''}>${d.trim()}</option>`).join('');
+                        html = `
+                            <div class="match-card">
+                                <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
+                                <div class="teams">${tytul}</div>
+                                ${infoOObecnymTypie}
+                                <input type="hidden" id="typA_${mecz.id}" value="0">
+                                <input type="hidden" id="typB_${mecz.id}" value="0">
+                                <select id="awans_${mecz.id}" style="margin-top: 10px; font-weight: bold; width: 100%; padding: 12px; border-radius: 8px;">
+                                    <option value="">-- Wybierz Mistrza --</option>
+                                    ${opcje}
+                                </select>
+                                <button class="action-btn" onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
+                            </div>
+                        `;
+                    } 
+                    else {
+                        let awansClass = (valA !== '' && valB !== '' && valA === valB) ? 'awans-sekcja' : 'awans-sekcja hidden';
+                        html = `
+                            <div class="match-card">
+                                <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
+                                <div class="teams">${tytul}</div>
+                                ${infoOObecnymTypie}
+                                <div>
+                                    <input type="number" id="typA_${mecz.id}" class="wynik-input" min="0" value="${valA}" oninput="sprawdzRemis('${mecz.id}')">
+                                    <span style="font-weight:bold; font-size: 20px; margin: 0 10px; color: #a0aec0;">:</span>
+                                    <input type="number" id="typB_${mecz.id}" class="wynik-input" min="0" value="${valB}" oninput="sprawdzRemis('${mecz.id}')">
+                                </div>
+                                <div id="awans_sekcja_${mecz.id}" class="${awansClass}">
+                                    <label style="font-weight: bold; color: #E2C275;">REMIS! Kto wygra w rzutach karnych?</label><br>
+                                    <select id="awans_${mecz.id}" style="margin-top: 10px;">
+                                        <option value="">-- Wybierz awansującego --</option>
+                                        <option value="A" ${valAwans === 'A' ? 'selected' : ''}>${mecz.zespolA}</option>
+                                        <option value="B" ${valAwans === 'B' ? 'selected' : ''}>${mecz.zespolB}</option>
+                                    </select>
+                                </div>
+                                <button class="action-btn" onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
                             </div>
                         `;
                     }
-
-                    let awansClass = (valA !== '' && valB !== '' && valA === valB) ? 'awans-sekcja' : 'awans-sekcja hidden';
-
-                    html = `
-                        <div class="match-card">
-                            <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
-                            <div class="teams">${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}</div>
-                            
-                            ${infoOObecnymTypie}
-                            
-                            <div>
-                                <input type="number" id="typA_${mecz.id}" class="wynik-input" min="0" value="${valA}" oninput="sprawdzRemis('${mecz.id}')">
-                                <span style="font-weight:bold; font-size: 20px; margin: 0 10px; color: #a0aec0;">:</span>
-                                <input type="number" id="typB_${mecz.id}" class="wynik-input" min="0" value="${valB}" oninput="sprawdzRemis('${mecz.id}')">
-                            </div>
-                            
-                            <div id="awans_sekcja_${mecz.id}" class="${awansClass}">
-                                <label style="font-weight: bold; color: #E2C275;">REMIS! Kto wygra w rzutach karnych?</label><br>
-                                <select id="awans_${mecz.id}" style="margin-top: 10px;">
-                                    <option value="">-- Wybierz awansującego --</option>
-                                    <option value="A" ${valAwans === 'A' ? 'selected' : ''}>${mecz.zespolA}</option>
-                                    <option value="B" ${valAwans === 'B' ? 'selected' : ''}>${mecz.zespolB}</option>
-                                </select>
-                            </div>
-                            
-                            <button class="action-btn" onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
-                        </div>
-                    `;
                 }
-
                 containerAktywne.innerHTML += html;
             }
         });
 
-        if(licznikAktywnych === 0) {
-            containerAktywne.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Brak nadchodzących meczów do typowania!</p>";
-        }
-        if(licznikZakonczonych === 0) {
-            containerZakonczone.innerHTML = "<p style='text-align:center; color: #718096; font-size: 14px;'>Żaden mecz nie został jeszcze rozegrany.</p>";
-        }
-    }
-
-    function sprawdzRemis(idMeczu) {
-        const typA = document.getElementById(`typA_${idMeczu}`).value;
-        const typB = document.getElementById(`typB_${idMeczu}`).value;
-        const sekcjaAwansu = document.getElementById(`awans_sekcja_${idMeczu}`);
-
-        if (typA !== "" && typB !== "" && typA === typB) {
-            sekcjaAwansu.classList.remove('hidden');
-        } else {
-            sekcjaAwansu.classList.add('hidden');
-            document.getElementById(`awans_${idMeczu}`).value = ""; 
-        }
+        if(licznikAktywnych === 0) containerAktywne.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Brak nadchodzących meczów do typowania!</p>";
+        if(licznikZakonczonych === 0) containerZakonczone.innerHTML = "<p style='text-align:center; color: #718096; font-size: 14px;'>Żaden mecz nie został jeszcze rozegrany.</p>";
     }
 
     async function wyslijTyp(idMeczu) {
-        const typA = document.getElementById(`typA_${idMeczu}`).value;
-        const typB = document.getElementById(`typB_${idMeczu}`).value;
+        const elementA = document.getElementById(`typA_${idMeczu}`);
+        const elementB = document.getElementById(`typB_${idMeczu}`);
         const typAwans = document.getElementById(`awans_${idMeczu}`).value;
+        
+        const typA = elementA ? elementA.value : "";
+        const typB = elementB ? elementB.value : "";
 
         if (typA === "" || typB === "") return alert("Wpisz wynik dla obu drużyn!");
-        if (typA === typB && typAwans === "") return alert("Przy remisie musisz wybrać drużynę, która awansuje po rzutach karnych!");
+        if (typA === typB && typA !== "0" && typAwans === "") return alert("Przy remisie musisz wybrać drużynę, która awansuje!");
+        
+        // Zabezpieczenie dla zakładu na Mistrza (gdzie A i B to ukryte zera)
+        if (typA === "0" && typB === "0" && typAwans === "") return alert("Musisz wybrać drużynę!");
 
         const przycisk = document.getElementById(`btn_${idMeczu}`);
         przycisk.innerText = "Przetwarzanie...";
