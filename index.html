@@ -106,6 +106,36 @@
         .badge-partial { background: #e67e22; color: #000; }
         .badge-missed { background: #e74c3c; color: #fff; }
 
+        /* STYLE TABEL GRUPOWYCH */
+        .group-container { background: rgba(0,0,0,0.3); border: 1px solid rgba(226, 194, 117, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 30px;}
+        .group-container h3 { color: #E2C275; margin-top: 0; text-align: center; text-transform: uppercase; font-size: 1.5rem; letter-spacing: 2px;}
+        .group-table th { padding: 10px; font-size: 11px; text-align: center; }
+        .group-table td { padding: 10px; font-size: 14px; text-align: center; }
+        .group-table td.team-name { text-align: left; font-weight: bold; }
+
+        /* AKORDEONY DNIOWE */
+        .date-accordion { background: linear-gradient(135deg, #1a2333 0%, #0d121d 100%); border: 1px solid rgba(226, 194, 117, 0.2); border-radius: 8px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .accordion-header { background: rgba(0,0,0,0.4); color: #E2C275; padding: 15px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; transition: 0.3s;}
+        .accordion-header:hover { background: rgba(226,194,117,0.1); }
+        .accordion-content { padding: 15px; display: none; }
+        .accordion-content.active { display: block; }
+        .accordion-icon { transition: transform 0.3s; }
+        .accordion-header.open .accordion-icon { transform: rotate(180deg); }
+
+        /* MINIMALISTYCZNA HISTORIA MECZÓW */
+        .history-row { display: flex; flex-direction: column; background: linear-gradient(145deg, #131b2c 0%, #0d121d 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 12px; padding: 12px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);}
+        .history-header { font-size: 11px; color: #a0aec0; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; text-align: left; }
+        .history-data { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;}
+        .history-block { flex: 1; text-align: center; display: flex; flex-direction: column; }
+        .history-label { font-size: 9px; color: #718096; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;}
+        .history-value { font-size: 15px; font-weight: bold; color: #ffffff; }
+        .history-points { font-weight: 900; font-size: 12px; padding: 6px 10px; border-radius: 6px; white-space: nowrap;}
+        
+        /* KOLORY PUNKTACJI */
+        .pts-perfect { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid #2ecc71; }
+        .pts-partial { background: rgba(230, 126, 34, 0.15); color: #e67e22; border: 1px solid #e67e22; }
+        .pts-missed { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid #e74c3c; }
+
         /* ========================================= */
         /* STYLE DLA DRABINKI (ZE SKALOWANIEM)       */
         /* ========================================= */
@@ -157,6 +187,7 @@
     <!-- MENU GŁÓWNE -->
     <div class="main-nav">
         <button id="nav-typer" class="active" onclick="zmienStronę('typer')">📝 TYPER</button>
+        <button id="nav-grupy" onclick="zmienStronę('grupy')">📊 GRUPY</button>
         <button id="nav-drabinka" onclick="zmienStronę('drabinka')">🏆 DRABINKA</button>
     </div>
 
@@ -180,8 +211,14 @@
         <h2 class="section-title">Kupony (Faza Pucharowa)</h2>
         <div id="mecze-container"></div>
 
-        <h2 class="section-title">Rozegrane Mecze (Historia)</h2>
+    <h2 class="section-title">Rozegrane Mecze (Historia)</h2>
         <div id="mecze-zakonczone-container"></div>
+    </div>
+
+    <div id="strona-grupy" class="container hidden">
+        <h1 style="text-align: center; color: #E2C275; margin-bottom: 5px; font-size: 2.8em; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 10px rgba(226, 194, 117, 0.3);">FAZA GRUPOWA</h1>
+        <div class="subtitle" style="text-align: center; font-size: 1.2rem; margin-top: 0; margin-bottom: 30px; color: #a0aec0; text-transform: uppercase; letter-spacing: 4px;">Tabele Oficjalne</div>
+        <div id="grupy-container"></div>
     </div>
 
     <!-- STRONA 2: DRABINKA -->
@@ -362,6 +399,7 @@
     let globalneMecze = [];
     let globalnyRankingKlasyczny = [];
     let globalnyRankingAlternatywny = [];
+    let globalneGrupy = {};
 
     window.onload = function() {
         pobierzDaneNaStart();
@@ -373,9 +411,11 @@
     // ==========================================
     function zmienStronę(nazwa) {
         document.getElementById('nav-typer').classList.remove('active');
+        document.getElementById('nav-grupy').classList.remove('active');
         document.getElementById('nav-drabinka').classList.remove('active');
         
         document.getElementById('strona-typer').classList.add('hidden');
+        document.getElementById('strona-grupy').classList.add('hidden');
         document.getElementById('strona-drabinka').classList.add('hidden');
         
         document.getElementById(`nav-${nazwa}`).classList.add('active');
@@ -488,16 +528,25 @@ function zmienTabele(typ) {
         }
     }
 
-    async function pobierzDaneNaStart() {
+ async function pobierzDaneNaStart() {
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
+            
+            data.mecze.sort((a, b) => {
+                if (!a.dataRozpoczecia) return 1;
+                if (!b.dataRozpoczecia) return -1;
+                return new Date(a.dataRozpoczecia) - new Date(b.dataRozpoczecia);
+            });
+
             globalneMecze = data.mecze;
             globalnyRankingKlasyczny = data.rankingKlasyczny;
             globalnyRankingAlternatywny = data.rankingAlternatywny;
+            globalneGrupy = data.grupy; // Zaciąganie grup
             
             renderujRanking(globalnyRankingKlasyczny);
             zbudujListeGraczy(globalnyRankingKlasyczny);
+            renderujGrupy(globalneGrupy); // Rysowanie tabel grupowych
             
             document.getElementById('loader').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
@@ -510,20 +559,71 @@ function zmienTabele(typ) {
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
+            
+            data.mecze.sort((a, b) => {
+                if (!a.dataRozpoczecia) return 1;
+                if (!b.dataRozpoczecia) return -1;
+                return new Date(a.dataRozpoczecia) - new Date(b.dataRozpoczecia);
+            });
+
             globalneMecze = data.mecze;
             globalnyRankingKlasyczny = data.rankingKlasyczny;
             globalnyRankingAlternatywny = data.rankingAlternatywny;
+            globalneGrupy = data.grupy;
             
             if (document.getElementById('btn-klas').classList.contains('active')) {
                 renderujRanking(globalnyRankingKlasyczny);
             } else {
                 renderujRanking(globalnyRankingAlternatywny);
             }
+            renderujGrupy(globalneGrupy);
             renderujMecze(globalneMecze);
         } catch (e) { console.log("Błąd odświeżania w tle", e); }
     }
 
-    function renderujMecze(mecze) {
+    function renderujGrupy(grupy) {
+        const container = document.getElementById('grupy-container');
+        container.innerHTML = "";
+        
+        if (Object.keys(grupy).length === 0) {
+             container.innerHTML = "<p style='text-align:center; color: #a0aec0;'>Faza grupowa jeszcze się nie rozpoczęła.</p>";
+             return;
+        }
+
+        for (let g in grupy) {
+            let html = `
+            <div class="group-container">
+                <h3>GRUPA ${g}</h3>
+                <table class="group-table" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">ZESPÓŁ</th>
+                            <th>M</th>
+                            <th>PKT</th>
+                            <th>BZ</th>
+                            <th>BS</th>
+                            <th>+/-</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            grupy[g].forEach(team => {
+                html += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="team-name">${team.nazwa}</td>
+                        <td>${team.mecze}</td>
+                        <td style="font-weight:bold; color:#E2C275; font-size:16px;">${team.punkty}</td>
+                        <td>${team.bramkiZ}</td>
+                        <td>${team.bramkiS}</td>
+                        <td style="color: ${team.bilans > 0 ? '#48bb78' : (team.bilans < 0 ? '#fc8181' : '#cbd5e0')}">${team.bilans > 0 ? '+'+team.bilans : team.bilans}</td>
+                    </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML += html;
+        }
+    }
+
+function renderujMecze(mecze) {
         const containerAktywne = document.getElementById('mecze-container');
         const containerZakonczone = document.getElementById('mecze-zakonczone-container');
         
@@ -533,50 +633,77 @@ function zmienTabele(typ) {
         const teraz = new Date();
         let licznikAktywnych = 0;
         let licznikZakonczonych = 0;
+        
+        let aktywneDni = {}; // Magazyn na akordeony
 
         mecze.forEach(mecz => {
             let meczZakonczony = false;
+            let isGroup = (mecz.faza.length === 1 && mecz.faza.match(/[A-Z]/));
+
+            // Tłumaczenie Fazy
+            let podtytulFazy = "";
+            if (isGroup) { podtytulFazy = `GRUPA ${mecz.faza}`; } 
+            else {
+                switch(mecz.faza) {
+                    case "16": podtytulFazy = "1/16 FINAŁU"; break;
+                    case "8": podtytulFazy = "1/8 FINAŁU"; break;
+                    case "QF": podtytulFazy = "ĆWIERĆFINAŁ"; break;
+                    case "SF": podtytulFazy = "PÓŁFINAŁ"; break;
+                    case "3RD": podtytulFazy = "MECZ O 3. MIEJSCE"; break;
+                    case "FIN": podtytulFazy = "FINAŁ"; break;
+                }
+            }
+            
+            let fazaStyl = podtytulFazy ? `<span style="color:#E2C275;">${podtytulFazy}</span> &bull; ` : "";
+
             if (mecz.faza === "MISTRZ") {
                 if (mecz.awans !== "") meczZakonczony = true;
             } else {
                 if (mecz.wynikA !== "" && mecz.wynikB !== "") meczZakonczony = true;
             }
 
+            // ============================================
+            // WIDOK MECZÓW ZAKOŃCZONYCH (MINIMALISTYCZNY)
+            // ============================================
             if (meczZakonczony) {
                 licznikZakonczonych++;
                 let mojTyp = mecz.typy.find(t => t.imie === aktualnyGracz);
                 
                 let wynikTekst = "";
                 let typTekst = "Brak typu";
-                let klasaKarty = "card-missed";
-                let badgeHTML = '<span class="status-badge badge-missed">❌ 0 pkt (Brak typu)</span>';
+                let klasaPkt = "pts-missed";
+                let textPkt = "0 PKT";
 
                 if (mecz.faza === "MISTRZ") {
-                    wynikTekst = `Mistrz: ${mecz.awans}`;
+                    wynikTekst = mecz.awans;
                     if (mojTyp) {
-                        typTekst = `Twój typ: ${mojTyp.typAwans}`;
+                        typTekst = mojTyp.typAwans || "Brak";
                         if (mojTyp.typAwans.toLowerCase() === mecz.awans.toLowerCase()) {
-                            klasaKarty = "card-perfect";
-                            badgeHTML = '<span class="status-badge badge-perfect">🏆 +5 pkt do Tabeli Progresywnej!</span>';
+                            klasaPkt = "pts-perfect";
+                            textPkt = "PRO: +5 PKT";
                         } else {
-                            klasaKarty = "card-missed";
-                            badgeHTML = '<span class="status-badge badge-missed">❌ Nietrafiony</span>';
+                            textPkt = "0 PKT";
                         }
                     }
                 } 
                 else {
                     wynikTekst = `${mecz.wynikA} : ${mecz.wynikB}`;
                     let offKtoAwans = mecz.awans === 'A' ? mecz.zespolA : (mecz.awans === 'B' ? mecz.zespolB : '');
-                    if (mecz.wynikA === mecz.wynikB && offKtoAwans) wynikTekst += ` (Awans: ${offKtoAwans})`;
+                    if (mecz.wynikA === mecz.wynikB && offKtoAwans && !isGroup) wynikTekst += ` (${offKtoAwans})`;
                     
                     if (mojTyp) {
                         typTekst = `${mojTyp.typA} : ${mojTyp.typB}`;
                         let tKtoAwans = mojTyp.typAwans === 'A' ? mecz.zespolA : (mojTyp.typAwans === 'B' ? mecz.zespolB : '');
-                        if (mojTyp.typA === mojTyp.typB && tKtoAwans) typTekst += ` (Awans: ${tKtoAwans})`;
+                        if (mojTyp.typA === mojTyp.typB && tKtoAwans && !isGroup) typTekst += ` (${tKtoAwans})`;
                         
                         let offZwyciezca = mecz.wynikA > mecz.wynikB ? 'A' : (mecz.wynikB > mecz.wynikA ? 'B' : mecz.awans);
                         let typZwyciezca = mojTyp.typA > mojTyp.typB ? 'A' : (mojTyp.typB > mojTyp.typA ? 'B' : mojTyp.typAwans);
                         
+                        if(isGroup) {
+                           if(mecz.wynikA == mecz.wynikB) offZwyciezca = "REMIS";
+                           if(mojTyp.typA == mojTyp.typB) typZwyciezca = "REMIS";
+                        }
+
                         let hitZwyc = (offZwyciezca === typZwyciezca && offZwyciezca !== "");
                         let hitWynik = (mecz.wynikA === mojTyp.typA && mecz.wynikB === mojTyp.typB);
                         
@@ -585,38 +712,46 @@ function zmienTabele(typ) {
                         if (hitWynik) pktKlas += 2;
 
                         let pktAltZ = 1, pktAltW = 2;
+                        if (mecz.faza === "16" || mecz.faza === "8" || mecz.faza === "QF") { pktAltZ = 1; pktAltW = 2; }
                         if (mecz.faza === "SF") { pktAltZ = 2; pktAltW = 3; }
-                        if (mecz.faza === "F" || mecz.faza === "3RD") { pktAltZ = 3; pktAltW = 4; }
+                        if (mecz.faza === "FIN" || mecz.faza === "3RD") { pktAltZ = 3; pktAltW = 4; }
+                        
                         let pktAlt = 0;
                         if (hitZwyc) pktAlt += pktAltZ;
                         if (hitWynik) pktAlt += pktAltW;
                         
-                        if (hitWynik) {
-                            klasaKarty = "card-perfect";
-                        } else if (hitZwyc) {
-                            klasaKarty = "card-partial";
-                        } else {
-                            klasaKarty = "card-missed";
-                        }
+                        if (hitWynik) klasaPkt = "pts-perfect";
+                        else if (hitZwyc) klasaPkt = "pts-partial";
                         
-                        let naglowekOdznaki = hitWynik ? "🏆 Trafiony Wynik!" : (hitZwyc ? "🔥 Trafiony Zwycięzca" : "❌ Nietrafiony");
-                        badgeHTML = `<span class="status-badge badge-${klasaKarty.split('-')[1]}">${naglowekOdznaki}<br><span style="font-size: 10px; opacity: 0.8; margin-top:3px; display:block;">KLASYCZNIE: +${pktKlas} PKT | PRO: +${pktAlt} PKT</span></span>`;
+                        if(hitZwyc || hitWynik) textPkt = `K: +${pktKlas} | P: +${pktAlt}`;
                     }
                 }
                 
-                let tytul = mecz.faza === "MISTRZ" ? "Typowanie Mistrza Świata" : `${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}`;
+                let tytul = mecz.faza === "MISTRZ" ? "MISTRZ ŚWIATA" : `${mecz.zespolA} vs ${mecz.zespolB}`;
 
                 const htmlZakonczone = `
-                    <div class="match-card ${klasaKarty}">
-                        <div class="match-time" style="color: #cbd5e0; opacity: 0.5;">KONIEC SPOTKANIA</div>
-                        <div class="teams">${tytul}</div>
-                        <div style="font-size: 26px; font-weight: 900; color: #E2C275; margin: 12px 0; letter-spacing: 1px;">${wynikTekst}</div>
-                        <div style="font-size: 15px; color: #cbd5e0; margin-bottom: 5px;"><strong style="color:white; font-size: 16px;">${typTekst}</strong></div>
-                        ${badgeHTML}
+                    <div class="history-row">
+                        <div class="history-header">${fazaStyl}${tytul}</div>
+                        <div class="history-data">
+                            <div class="history-block" style="text-align: left;">
+                                <span class="history-label">Twój Typ</span>
+                                <span class="history-value">${typTekst}</span>
+                            </div>
+                            <div class="history-block" style="text-align: center;">
+                                <span class="history-label">Wynik</span>
+                                <span class="history-value">${wynikTekst}</span>
+                            </div>
+                            <div class="history-block" style="text-align: right; flex: 0.8;">
+                                <span class="history-points ${klasaPkt}">${textPkt}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
                 containerZakonczone.innerHTML += htmlZakonczone;
             } 
+            // ============================================
+            // WIDOK MECZÓW AKTYWNYCH (KARTY DO AKORDEONU)
+            // ============================================
             else {
                 licznikAktywnych++;
                 
@@ -628,11 +763,11 @@ function zmienTabele(typ) {
                 }
 
                 let html = '';
+                let fazaStylKarta = podtytulFazy ? `<div style="font-size: 11px; color:#E2C275; margin-top:-10px; margin-bottom:15px; font-weight:bold; letter-spacing:1px;">${podtytulFazy}</div>` : "";
                 let tytul = mecz.faza === "MISTRZ" ? "Kto zdobędzie Mistrzostwo Świata?" : `${mecz.zespolA} &nbsp;<span style="color:#E2C275; font-size:16px;">VS</span>&nbsp; ${mecz.zespolB}`;
 
                 if (zablokowany) {
                     let typyGraczyHTML = '<div class="bets-list"><h4 style="color:#E2C275; margin-top:0; margin-bottom: 15px; text-align:center; font-size: 14px; letter-spacing: 1px;">TYPY GRACZY:</h4>';
-                    
                     if (mecz.typy && mecz.typy.length > 0) {
                         mecz.typy.forEach(t => {
                             let textPodgladu = "";
@@ -640,16 +775,10 @@ function zmienTabele(typ) {
                                 textPodgladu = t.typAwans;
                             } else {
                                 let ktoAwans = (t.typAwans === 'A') ? mecz.zespolA : (t.typAwans === 'B' ? mecz.zespolB : '');
-                                let awansInfo = (t.typA === t.typB && ktoAwans) ? `<span class="bet-awans">(Awans: ${ktoAwans})</span>` : '';
+                                let awansInfo = (t.typA === t.typB && ktoAwans && !isGroup) ? `<span class="bet-awans">(Awans: ${ktoAwans})</span>` : '';
                                 textPodgladu = `${t.typA} : ${t.typB}${awansInfo}`;
                             }
-
-                            typyGraczyHTML += `
-                                <div class="bet-item">
-                                    <span class="bet-name">👤 ${t.imie}</span>
-                                    <span class="bet-score">${textPodgladu}</span>
-                                </div>
-                            `;
+                            typyGraczyHTML += `<div class="bet-item"><span class="bet-name">👤 ${t.imie}</span><span class="bet-score">${textPodgladu}</span></div>`;
                         });
                     } else {
                         typyGraczyHTML += '<div style="text-align:center; font-size: 14px; color:#718096;">Nikt nie zdążył obstawić.</div>';
@@ -658,7 +787,8 @@ function zmienTabele(typ) {
 
                     html = `
                         <div class="match-card">
-                            <div class="match-time">🕒 ${mecz.faza === "MISTRZ" ? "KONIEC CZASU NA ZAKŁADY" : "KICK-OFF: " + formatujDate(mecz.dataRozpoczecia)}</div>
+                            <div class="match-time">🕒 ${mecz.faza === "MISTRZ" ? "KONIEC ZAKŁADÓW" : formatujDate(mecz.dataRozpoczecia)}</div>
+                            ${fazaStylKarta}
                             <div class="teams">${tytul}</div>
                             <div class="locked-msg">🔒 MECZ ROZPOCZĘTY - TYPOWANIE ZAMKNIĘTE</div>
                             ${typyGraczyHTML}
@@ -677,7 +807,7 @@ function zmienTabele(typ) {
                             infoOObecnymTypie = `<div class="my-bet-info">✅ Twój zapisany mistrz: <span style="font-size: 18px;">${valAwans}</span></div>`;
                         } else {
                             let nazwaAwansu = (valAwans === 'A') ? mecz.zespolA : mecz.zespolB;
-                            let awansTekst = (valA === valB && valAwans) ? `<br><span style="font-size: 12px; font-weight: normal; color: #9ae6b4;">(Wskazany awans: ${nazwaAwansu})</span>` : '';
+                            let awansTekst = (valA === valB && valAwans && !isGroup) ? `<br><span style="font-size: 12px; font-weight: normal; color: #9ae6b4;">(Wskazany awans: ${nazwaAwansu})</span>` : '';
                             infoOObecnymTypie = `<div class="my-bet-info">✅ Twój zapisany typ to: <span style="font-size: 18px;">${valA} : ${valB}</span> ${awansTekst}</div>`;
                         }
                     }
@@ -686,7 +816,8 @@ function zmienTabele(typ) {
                         let opcje = mecz.zespolB.split(',').map(d => `<option value="${d.trim()}" ${valAwans === d.trim() ? 'selected' : ''}>${d.trim()}</option>`).join('');
                         html = `
                             <div class="match-card">
-                                <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
+                                <div class="match-time">🕒 DO: ${formatujDate(mecz.dataRozpoczecia)}</div>
+                                ${fazaStylKarta}
                                 <div class="teams">${tytul}</div>
                                 ${infoOObecnymTypie}
                                 <input type="hidden" id="typA_${mecz.id}" value="0">
@@ -695,21 +826,22 @@ function zmienTabele(typ) {
                                     <option value="">-- Wybierz Mistrza --</option>
                                     ${opcje}
                                 </select>
-                                <button class="action-btn" onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
+                                <button class="action-btn" onclick="wyslijTyp('${mecz.id}', false)" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
                             </div>
                         `;
                     } 
                     else {
-                        let awansClass = (valA !== '' && valB !== '' && valA === valB) ? 'awans-sekcja' : 'awans-sekcja hidden';
+                        let awansClass = (!isGroup && valA !== '' && valB !== '' && valA === valB) ? 'awans-sekcja' : 'awans-sekcja hidden';
                         html = `
                             <div class="match-card">
-                                <div class="match-time">🕒 KICK-OFF: ${formatujDate(mecz.dataRozpoczecia)}</div>
+                                <div class="match-time">🕒 ${formatujDate(mecz.dataRozpoczecia)}</div>
+                                ${fazaStylKarta}
                                 <div class="teams">${tytul}</div>
                                 ${infoOObecnymTypie}
                                 <div>
-                                    <input type="number" id="typA_${mecz.id}" class="wynik-input" min="0" value="${valA}" oninput="sprawdzRemis('${mecz.id}')">
+                                    <input type="number" id="typA_${mecz.id}" class="wynik-input" min="0" value="${valA}" oninput="sprawdzRemis('${mecz.id}', ${isGroup})">
                                     <span style="font-weight:bold; font-size: 20px; margin: 0 10px; color: #a0aec0;">:</span>
-                                    <input type="number" id="typB_${mecz.id}" class="wynik-input" min="0" value="${valB}" oninput="sprawdzRemis('${mecz.id}')">
+                                    <input type="number" id="typB_${mecz.id}" class="wynik-input" min="0" value="${valB}" oninput="sprawdzRemis('${mecz.id}', ${isGroup})">
                                 </div>
                                 <div id="awans_sekcja_${mecz.id}" class="${awansClass}">
                                     <label style="font-weight: bold; color: #E2C275;">REMIS! Kto wygra w rzutach karnych?</label><br>
@@ -719,20 +851,65 @@ function zmienTabele(typ) {
                                         <option value="B" ${valAwans === 'B' ? 'selected' : ''}>${mecz.zespolB}</option>
                                     </select>
                                 </div>
-                                <button class="action-btn" onclick="wyslijTyp('${mecz.id}')" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
+                                <button class="action-btn" onclick="wyslijTyp('${mecz.id}', ${isGroup})" id="btn_${mecz.id}">${mojTyp ? 'Zmień swój typ' : 'Zatwierdź Kupon'}</button>
                             </div>
                         `;
                     }
                 }
-                containerAktywne.innerHTML += html;
+                
+                // Grupowanie aktywnych meczów po dacie!
+                let dataDlaAkordeonu = getDzienMeczu(mecz.dataRozpoczecia);
+                if (!aktywneDni[dataDlaAkordeonu]) aktywneDni[dataDlaAkordeonu] = "";
+                aktywneDni[dataDlaAkordeonu] += html;
             }
         });
 
-        if(licznikAktywnych === 0) containerAktywne.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Brak nadchodzących meczów do typowania!</p>";
-        if(licznikZakonczonych === 0) containerZakonczone.innerHTML = "<p style='text-align:center; color: #718096; font-size: 14px;'>Żaden mecz nie został jeszcze rozegrany.</p>";
+        // ============================================
+        // RYSOWANIE AKORDEONÓW Z AKTYWNYMI MECZAMI
+        // ============================================
+        if(licznikAktywnych === 0) {
+            containerAktywne.innerHTML = "<p style='text-align:center; color: #a0aec0; font-size: 16px;'>Brak nadchodzących meczów do typowania!</p>";
+        } else {
+            let isFirst = true;
+            for (let dzien in aktywneDni) {
+                let openClass = isFirst ? "open" : "";
+                let activeClass = isFirst ? "active" : "";
+                containerAktywne.innerHTML += `
+                    <div class="date-accordion">
+                        <div class="accordion-header ${openClass}" onclick="toggleAccordion(this)">
+                            <span>📅 ${dzien}</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content ${activeClass}">
+                            ${aktywneDni[dzien]}
+                        </div>
+                    </div>
+                `;
+                isFirst = false; // Rozwijamy tylko pierwszy akordeon na liście
+            }
+        }
+
+        if(licznikZakonczonych === 0) {
+            containerZakonczone.innerHTML = "<p style='text-align:center; color: #718096; font-size: 14px;'>Żaden mecz nie został jeszcze rozegrany.</p>";
+        }
     }
 
-    async function wyslijTyp(idMeczu) {
+    function sprawdzRemis(idMeczu, isGroup) {
+        if (isGroup) return; 
+        
+        const typA = document.getElementById(`typA_${idMeczu}`).value;
+        const typB = document.getElementById(`typB_${idMeczu}`).value;
+        const sekcjaAwansu = document.getElementById(`awans_sekcja_${idMeczu}`);
+
+        if (typA !== "" && typB !== "" && typA === typB) {
+            sekcjaAwansu.classList.remove('hidden');
+        } else {
+            sekcjaAwansu.classList.add('hidden');
+            document.getElementById(`awans_${idMeczu}`).value = ""; 
+        }
+    }
+
+    async function wyslijTyp(idMeczu, isGroup) {
         const elementA = document.getElementById(`typA_${idMeczu}`);
         const elementB = document.getElementById(`typB_${idMeczu}`);
         const typAwans = document.getElementById(`awans_${idMeczu}`).value;
@@ -741,9 +918,11 @@ function zmienTabele(typ) {
         const typB = elementB ? elementB.value : "";
 
         if (typA === "" || typB === "") return alert("Wpisz wynik dla obu drużyn!");
-        if (typA === typB && typA !== "0" && typAwans === "") return alert("Przy remisie musisz wybrać drużynę, która awansuje!");
         
-        // Zabezpieczenie dla zakładu na Mistrza (gdzie A i B to ukryte zera)
+        if (!isGroup && typA === typB && typA !== "0" && typAwans === "") {
+             return alert("Przy remisie musisz wybrać drużynę, która awansuje!");
+        }
+        
         if (typA === "0" && typB === "0" && typAwans === "") return alert("Musisz wybrać drużynę!");
 
         const przycisk = document.getElementById(`btn_${idMeczu}`);
@@ -776,6 +955,20 @@ function zmienTabele(typ) {
             przycisk.innerText = "Spróbuj ponownie";
             przycisk.disabled = false;
         }
+    }
+
+    function getDzienMeczu(dataStr) {
+        if (!dataStr) return "Termin do ustalenia";
+        const d = new Date(dataStr);
+        const dni = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
+        const miesiace = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"];
+        return `${dni[d.getDay()]}, ${d.getDate()} ${miesiace[d.getMonth()]}`;
+    }
+
+    function toggleAccordion(element) {
+        element.classList.toggle('open');
+        let content = element.nextElementSibling;
+        content.classList.toggle('active');
     }
 </script>
 
