@@ -187,6 +187,7 @@
     <!-- MENU GŁÓWNE -->
     <div class="main-nav">
         <button id="nav-typer" class="active" onclick="zmienStronę('typer')">📝 TYPER</button>
+        <button id="nav-podglad" onclick="zmienStronę('podglad')">👥 TYPY GRACZY</button>
         <button id="nav-grupy" onclick="zmienStronę('grupy')">📊 GRUPY</button>
         <button id="nav-drabinka" onclick="zmienStronę('drabinka')">🏆 DRABINKA</button>
     </div>
@@ -213,6 +214,12 @@
 
     <h2 class="section-title">Rozegrane Mecze (Historia)</h2>
         <div id="mecze-zakonczone-container"></div>
+    </div>
+
+    <div id="strona-podglad" class="container hidden">
+        <h1>TYPY GRACZY</h1>
+        <div class="subtitle">Kto co obstawił</div>
+        <div id="podglad-container"></div>
     </div>
 
     <div id="strona-grupy" class="container hidden">
@@ -411,10 +418,12 @@
     // ==========================================
     function zmienStronę(nazwa) {
         document.getElementById('nav-typer').classList.remove('active');
+        document.getElementById('nav-podglad').classList.remove('active');
         document.getElementById('nav-grupy').classList.remove('active');
         document.getElementById('nav-drabinka').classList.remove('active');
         
         document.getElementById('strona-typer').classList.add('hidden');
+        document.getElementById('strona-podglad').classList.add('hidden');
         document.getElementById('strona-grupy').classList.add('hidden');
         document.getElementById('strona-drabinka').classList.add('hidden');
         
@@ -546,6 +555,7 @@ function zmienTabele(typ) {
             
             renderujRanking(globalnyRankingKlasyczny);
             zbudujListeGraczy(globalnyRankingKlasyczny);
+            renderujPodgladTypow(globalneMecze);
             renderujGrupy(globalneGrupy); // Rysowanie tabel grupowych
             
             document.getElementById('loader').classList.add('hidden');
@@ -576,6 +586,7 @@ function zmienTabele(typ) {
             } else {
                 renderujRanking(globalnyRankingAlternatywny);
             }
+            renderujPodgladTypow(globalneMecze);
             renderujGrupy(globalneGrupy);
             renderujMecze(globalneMecze);
         } catch (e) { console.log("Błąd odświeżania w tle", e); }
@@ -969,6 +980,112 @@ function renderujMecze(mecze) {
         element.classList.toggle('open');
         let content = element.nextElementSibling;
         content.classList.toggle('active');
+    }
+
+    function renderujPodgladTypow(mecze) {
+        const container = document.getElementById('podglad-container');
+        container.innerHTML = "";
+        
+        const teraz = new Date();
+        let podgladDni = {};
+
+        mecze.forEach(mecz => {
+            let zablokowany = false;
+            if (mecz.dataRozpoczecia) {
+                const czasMeczu = new Date(mecz.dataRozpoczecia);
+                const godzinaPrzedMeczem = czasMeczu - (1 * 60 * 60 * 1000);
+                if (teraz > godzinaPrzedMeczem) zablokowany = true;
+            }
+            
+            let meczZakonczony = (mecz.faza === "MISTRZ" ? mecz.awans !== "" : (mecz.wynikA !== "" && mecz.wynikB !== ""));
+            let isGroup = (mecz.faza.length === 1 && mecz.faza.match(/[A-Z]/));
+            
+            // Pokazujemy typy tylko jeśli czas minął lub mecz jest rozliczony
+            if (zablokowany || meczZakonczony) {
+                let typyHTML = '<div class="bets-list" style="margin-top: 10px;">';
+                
+                if (mecz.typy && mecz.typy.length > 0) {
+                    mecz.typy.forEach(t => {
+                        let podgladWyniku = "";
+                        if (mecz.faza === "MISTRZ") {
+                            podgladWyniku = t.typAwans;
+                        } else {
+                            let ktoAwans = (t.typAwans === 'A') ? mecz.zespolA : (t.typAwans === 'B' ? mecz.zespolB : '');
+                            let awansInfo = (t.typA === t.typB && ktoAwans && !isGroup) ? ` <span class="bet-awans">(Awans: ${ktoAwans})</span>` : '';
+                            podgladWyniku = `${t.typA} : ${t.typB}${awansInfo}`;
+                        }
+                        typyHTML += `
+                            <div class="bet-item">
+                                <span class="bet-name">👤 ${t.imie}</span>
+                                <span class="bet-score">${podgladWyniku}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    typyHTML += '<div style="text-align:center; font-size: 13px; color:#718096; padding: 10px;">Nikt nie obstawił tego meczu.</div>';
+                }
+                typyHTML += '</div>';
+
+                let wynikOficjalny = "";
+                if (meczZakonczony) {
+                    wynikOficjalny = m_wynik = mecz.faza === "MISTRZ" ? ` <span style="color:#2ecc71;">(Wynik: ${mecz.awans})</span>` : ` <span style="color:#E2C275;">(${mecz.wynikA}:${mecz.wynikB})</span>`;
+                }
+
+                let tytul = mecz.faza === "MISTRZ" ? "MISTRZ ŚWIATA" : `${mecz.zespolA} vs ${mecz.zespolB}`;
+                
+                let fazaOpis = "";
+                if (isGroup) { fazaOpis = `Grupa ${mecz.faza}`; } 
+                else {
+                    switch(mecz.faza) {
+                        case "16": fazaOpis = "1/16 Finału"; break;
+                        case "8": fazaOpis = "1/8 Finału"; break;
+                        case "QF": fazaOpis = "Ćwierćfinał"; break;
+                        case "SF": fazaOpis = "Półfinał"; break;
+                        case "3RD": fazaOpis = "Mecz o 3. miejsce"; break;
+                        case "FIN": fazaOpis = "Finał"; break;
+                        default: fazaOpis = "Pucharowa";
+                    }
+                }
+
+                let meczHTML = `
+                    <div class="match-card" style="padding: 15px; text-align: left; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #a0aec0; margin-bottom: 5px; text-transform: uppercase; font-weight: bold;">
+                            <span>${fazaOpis}</span>
+                            <span style="color:#cbd5e0;">${mecz.faza === "MISTRZ" ? "Zamknięte" : formatujDate(mecz.dataRozpoczecia).split(',')[1] || ""}</span>
+                        </div>
+                        <div style="font-size: 16px; font-weight: bold; color: #ffffff;">${tytul}${wynikOficjalny}</div>
+                        ${typyHTML}
+                    </div>
+                `;
+
+                let dzienKey = mecz.faza === "MISTRZ" ? "ZAKŁADY SPECJALNE" : getDzienMeczu(mecz.dataRozpoczecia);
+                if (!podgladDni[dzienKey]) podgladDni[dzienKey] = "";
+                podgladDni[dzienKey] += meczHTML;
+            }
+        });
+
+        if (Object.keys(podgladDni).length === 0) {
+            container.innerHTML = "<p style='text-align:center; color: #a0aec0; padding: 20px; font-size: 15px;'>Typy innych graczy pojawią się tutaj automatycznie na godzinę przed rozpoczęciem każdego meczu (po zablokowaniu możliwości obstawiania).</p>";
+            return;
+        }
+
+        let isFirst = true;
+        for (let dzien in podgladDni) {
+            let openClass = isFirst ? "open" : "";
+            let activeClass = isFirst ? "active" : "";
+            container.innerHTML += `
+                <div class="date-accordion">
+                    <div class="accordion-header ${openClass}" onclick="toggleAccordion(this)">
+                        <span>📅 ${dzien}</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content ${activeClass}">
+                        ${podgladDni[dzien]}
+                    </div>
+                </div>
+            `;
+            isFirst = false;
+        }
     }
 </script>
 
